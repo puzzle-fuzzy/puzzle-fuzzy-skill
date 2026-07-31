@@ -1,17 +1,29 @@
 ---
-name: yxswy
-description: Apply the user's personal TypeScript full-stack engineering style. Use when creating, editing, reviewing, or explaining TypeScript/JavaScript projects, especially Bun or pnpm monorepos, React/Vite frontends, Elysia or Hono APIs, Drizzle/Zod domain code, deployment tools, Electron apps, or Tauri/Rust desktop shells for this user.
+name: puzzle-fuzzy-skill
+description: Apply Puzzle Fuzzy's TypeScript full-stack engineering preferences as a fallback decision layer. Use when creating, editing, reviewing, or explaining TypeScript/JavaScript projects, especially Bun or pnpm monorepos, React/Vite frontends, Elysia or Hono APIs, Drizzle/Zod domain code, deployment tools, Electron apps, or Tauri/Rust desktop shells for this user.
 ---
 
-# yxswy
+# puzzle-fuzzy-skill
 
 ## Overview
 
-Use this skill to align implementation choices with the user's existing coding habits. Prefer local project conventions first; use these preferences when starting new code, filling gaps, or choosing between reasonable options.
+Use this skill as Puzzle Fuzzy's preference layer, not as the primary source of technical truth. Start with the official documentation, standards, and security guidance for the selected technology and its installed version. Then respect explicit user requirements and compatible constraints already present in the repository. Apply the preferences below only when official guidance and project constraints do not settle the choice.
+
+## Decision Order
+
+Resolve implementation choices in this order:
+
+1. Follow explicit user requirements and safety constraints.
+2. Check the official documentation and maintained guidance for the actual framework, library, runtime, protocol, or platform version. Prefer official examples, supported integrations, and secure defaults.
+3. Inspect the current repository's architecture, package manager, scripts, and conventions. Preserve compatible existing behavior and avoid migrations that the task does not require.
+4. Use this skill's preferences only when the official guidance leaves multiple reasonable options or does not answer the question.
+5. If the official guidance, repository constraints, and these preferences still do not resolve the decision, state the uncertainty and ask before making a product-direction choice.
+
+Do not replace an official security, compatibility, API, or platform recommendation with a personal preference. When guidance may have changed, verify the version-aligned official source instead of relying on memory. Record important tradeoffs and distinguish documented facts from personal defaults.
 
 The user is a TypeScript full-stack engineer. They sometimes use Tauri/Rust and Electron; treat Rust as familiar but not the user's deepest area unless the repo clearly asks for it.
 
-## Core Defaults
+## Fallback Preferences
 
 - Inspect the repository before changing code. Identify package manager, workspace layout, scripts, linting, typecheck, test runner, and naming conventions.
 - Prefer the repo's current package manager. For greenfield personal projects, Bun and pnpm are both natural; Bun is common for newer service-heavy work, pnpm is common in larger workspace setups.
@@ -98,7 +110,7 @@ The user is a TypeScript full-stack engineer. They sometimes use Tauri/Rust and 
 - Do not collapse clear domain packages into one large utility module. The user's code tends to name concepts directly: `task-engine`, `workflow-engine`, `deploy-core`, `storage`, `runtime`, `api-client`, `repository`, `service`, `model`.
 - Prefer deterministic IDs, slug normalization, safe path handling, explicit cache headers, and stable error response codes in deployment/storage features.
 
-## New Project Bias
+## Fallback New-Project Preferences
 
 - Start with a small but real vertical slice rather than a hollow scaffold.
 - If building a full-stack product, prefer:
