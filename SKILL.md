@@ -94,7 +94,7 @@ license: MIT
 - 复杂产品、丰富状态、复杂 UI 组合、dashboard 或高级工作流优先 React；简单 CRUD、管理端、H5 和直线交互优先 Vue 3 + Vite。已有项目除非明确要求或有充分收益，不做框架迁移。
 - TypeScript 新项目的工具链默认优先级为 Bun + Turborepo + monorepo，其次是 pnpm + Turborepo，最后才是 npm；已有项目先保留实际兼容链路，不为了偏好强行换包管理器，但一旦确认需要调整就尽早完成，不长期维护两套工具链。
 - 新项目默认使用根目录 `biome.json`、`@biomejs/biome`、`lint` 和 `format`；不新增 ESLint/Prettier 平行规则，只有不可替代的框架规则才允许局部补充。
-- 新的多服务、可部署全栈项目默认使用 Docker Compose + PostgreSQL，并把数据库、迁移、健康检查和备份边界写清楚；明确的单机、离线、嵌入式或桌面工具才默认 SQLite。已有项目不为追求统一而强行迁移数据库；如果项目属于既有系统或小程序版本，且 MySQL、Redis 等数据库组合由原系统、平台或外部契约固定，则继续保留并记录边界，不能把新项目默认值套用到它上面。
+- 新的多服务、可部署全栈项目默认使用 Docker Compose + PostgreSQL，并把数据库、迁移、健康检查和备份边界写清楚；明确的单机、离线、嵌入式或桌面工具才默认 SQLite。已有项目以现有系统、产品和外部契约的数据库边界为准，不为追求统一而强行迁移数据库。
 - 需要历史、恢复或审计的业务记录优先软删除、审计字段、显式 retention 和恢复规则；必须物理删除的数据、secret、隐私擦除流程和不适合软删除的高容量表除外。
 - 中间件顺序会影响行为且仓库没有既有顺序时，使用 request ID、安全 headers、logging、rate limit、CORS、static assets、error handling、auth、业务路由的稳定顺序；有既有顺序时先保留并验证影响。
 - 内部原型和早期 MVP 在诊断充分时可以 MVP 后再引入 structured logging；生产、公开、安全敏感或分布式服务要更早使用结构化日志、脱敏和 request/trace ID。
@@ -214,7 +214,7 @@ license: MIT
 - 一个 JavaScript/TypeScript 仓库只保留一条主要安装链路和清晰的运行时边界：新项目优先 `packageManager` + `bun.lock` + `.bun-version`；pnpm/npm 回退项目使用对应 lockfile + `.node-version`。如果已有项目的应用运行在 Bun、而专用文档工具或平台工具必须使用 Node，可以保留多个明确隔离的运行时，但每个实际运行时都要固定版本、记录原因，不能无说明地混用或同时维护 Bun、Node 和 nvm 三套同义版本文件。
 - 新 Bun 项目使用根 `workspaces` + `turbo.json`，每个 app/package 提供标准任务，根脚本只调用 Turbo；根 `playwright.config.ts`、根 `tests/e2e/` 和根 `scripts/` 是工作区级自动化的默认位置。
 - 正文文档统一放根 `docs/` 并默认使用中文；`README.md` 可按 GitHub 读者保留英文或双语。长期命令逻辑放 `src/commands/`，工作区自动化入口按职责放根 `scripts/dev`、`scripts/db`、`scripts/verify`、`scripts/deploy`、`scripts/backup`、`scripts/release`。
-- 根 `tools/` 可以承载只读审计、外部 API/Provider 文档研究、浏览器人工查询和脱敏资料接收工具；它不是业务运行时，也不应因为目录偏好被自动移动到 `scripts/`。数据库迁移、部署、备份、发布和会改变工作区或线上状态的入口仍放在 `scripts/` 或 app 的 `src/commands/`，并保留显式确认边界。
+- 只有项目确实需要只读审计、外部 API/Provider 文档研究、浏览器人工查询或脱敏资料接收时，才创建根 `tools/`；它不是每个项目的必备目录，也不是业务运行时。数据库迁移、部署、备份、发布和会改变工作区或线上状态的入口仍放在 `scripts/` 或 app 的 `src/commands/`，并保留显式确认边界。
 - Tailwind 4 默认采用 CSS-first 配置和应用自己的 Vite 插件；没有明确兼容需求时删除根目录 `tailwind.config.ts`。Tailwind 3 或确实需要 legacy `@config` 时，配置只能放在所属前端应用目录并说明原因。
 - `assets/` 只放跨应用、需要版本控制的源资产；应用专属静态资源放在所属 `apps/<app>/public` 或 `apps/<app>/assets`。`data/` 只放脱敏 fixture 或本地运行数据约定，生产数据库、媒体、上传物和备份放在 checkout 之外。
 - 发现目录、工具链、env、共享 UI、测试或脚本位置需要调整时，默认在早期一次性统一，避免长期维护旧目录/新目录、旧配置/新配置或旧实现/新实现两套代码。

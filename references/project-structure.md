@@ -311,7 +311,7 @@ scripts/
 - `scripts/` 里的脚本只做编排、边界检查和外部命令调用；业务规则放在所属 `apps/<app>/src/commands/` 或 `packages/<pkg>/src/`，避免根脚本变成第二个服务层。
 - 新代码不使用 `apps/api/src/scripts/` 存放长期命令；改用 `apps/api/src/commands/`，再由根 `scripts/db/` 或 app package script 调用。
 - `apps/<app>/scripts/` 只在构建工具强制要求 app-local entrypoint 时使用，例如浏览器扩展打包；应保持薄并在对应 README/decision 说明。
-- 根 `tools/` 是研究与审计工具的允许边界：适合外部 API/Provider 文档查询、浏览器人工检索、资料脱敏、链接/contract/迁移审计和只读证据整理。工具应有自己的 README、允许主机和输出目录说明；登录、验证码和受限文档必须人工完成，不能绕过挑战、输出凭据或把未确认材料直接写成业务 contract。数据库、部署、备份、发布等状态变更入口仍放 `scripts/` 或 app 的 `src/commands/`。
+- 根 `tools/` 是按需创建的研究与审计工具边界，不是每个项目都必须存在的目录：需要时可用于外部 API/Provider 文档查询、浏览器人工检索、资料脱敏、链接/contract/迁移审计和只读证据整理。工具应有自己的 README、允许主机和输出目录说明；登录、验证码和受限文档必须人工完成，不能绕过挑战、输出凭据或把未确认材料直接写成业务 contract。数据库、部署、备份、发布等状态变更入口仍放 `scripts/` 或 app 的 `src/commands/`。
 - 自动化脚本的测试放在 `tests/` 或与 command 实现 colocate；不要将 `scripts/*.test.ts` 当作脚本入口。
 
 ## 8. Tailwind 与前端配置
@@ -376,18 +376,23 @@ deploy/
 
 UI 图标规则仍然独立生效：`assets/` 中存在图片或品牌素材，不代表可以用手写 SVG 或输入法 emoji 作为 UI icon；产品界面仍只使用 Lucide。
 
-## 11. 当前四套项目的只读盘点
+## 11. 四个项目归纳出的共同规范
 
-以下是 2026-08-24 对 `/Users/yxswy/Documents/Github` 的本地证据快照，不是永久事实；后续使用前应重新检查。
+以下结论来自 2026-08-24 对 `dht-observer`、`hospital-platform`、`jav-media-catalog`、`relay-transfer` 的只读盘点。它们是跨项目归纳出的个人规范，不是把某个项目的特殊实现复制给所有项目；后续使用前仍应重新检查当前仓库。
 
-| 项目 | 当前事实 | 与目标规范的差异 |
+| 维度 | 四个项目体现出的共同事实 | 归纳后的默认规范 |
 | --- | --- | --- |
-| `dht-observer` | `apps/server`；根 `Dockerfile`；`deploy/docker-compose.yml`；根 `.env.example`；pnpm + Biome + Turbo；根 `scripts/`；server 使用 `tsx --test`、web 使用 Vitest；当前工作树有既有未提交修改 | `apps/server`、根 Docker 入口和 pnpm 是历史边界；缺少明确 Node 版本文件；Playwright 尚未配置；不要覆盖已有未提交文件 |
-| `hospital-platform` | 小程序版本；pnpm 工作区；API/worker/小程序使用 Bun；众阳文档工具通过 Node 24 + 有界面 Playwright 供人工查询登录后 API 文档；根 `tools/` 做审计、文档接收和证据整理；`infra/docker-compose.yml`；数据库固定为原系统继承的 MySQL + Redis | MySQL/Redis 是既定产品和平台边界，不迁移为 PostgreSQL/SQLite；Bun 与 Node 需要分别固定并说明；`tools/` 是合法的研究/审计工具层，不应强行移动到 `scripts/` |
-| `jav-media-catalog` | `apps/api`；根 `docker-compose.yml`；`infra/nginx/`；根 `.env.example`、`assets/`、`data/`；Bun + Biome + Turbo；React `packages/catalog-ui` 被 Web/Electron 共享；组件测试当前使用 `bun:test`；API 仍有 `src/scripts/` | API、Bun/工具链、同框架共享 UI 方向已符合；Docker/Compose/Nginx、根 env、脚本位置和 UI 测试 runner 是后续迁移项；`simplebar-react` 不等于虚拟滚动 |
-| `relay-transfer` | `apps/api`；`apps/api/.env.example`；根 `.bun-version` 与旧 `.nvmrc`；Bun + Biome；根 `playwright.config.ts`、`vitest.config.ts`；Vue `packages/catalog-ui`；没有根 `tailwind.config.ts` 或 `turbo.json`；Vitest 覆盖 API/domain/storage/UI | env 应收拢根目录；删除已无职责的 `.nvmrc` 前要完成 Node/Bun 边界验证；新编排阶段补根 Turbo；Vitest 应收窄到前端组件或有明确 mock/runtime 理由的边界；SQLite 是当前单实例产品选择，不因 PostgreSQL 默认而迁移 |
+| 工作区边界 | 四个项目都使用 `apps/`、`packages/`、根 `package.json`、根 Biome 或统一脚本入口；部分历史项目仍有 `apps/server`、应用级 env 或手工编排 | 新项目使用 `apps/*`、`packages/*`、根 workspace 配置和统一任务图；历史目录只在引用、部署和数据边界审计后迁移 |
+| 包管理器与运行时 | Bun + Turborepo 是目标方向；已有项目同时存在 Bun 和 pnpm；专用工具可能有独立运行时 | 新项目优先 Bun + Turborepo；已有 pnpm 项目不强行切换。安装器、应用运行时和专用工具运行时分开记录并固定版本 |
+| 格式化与静态检查 | 四个项目都以 Biome 为主要格式化/lint 工具，没有形成新的 ESLint/Prettier 平行链路 | 默认使用根 `biome.json`；只有不可替代的框架规则才允许局部补充，并记录原因 |
+| 前端与共享 UI | React、Vue、小程序等平台并存；同一渲染框架的 Web/Electron 可以共享领域 UI；不同框架不能直接共享组件实现 | 复杂产品优先 React，简单管理/H5 优先 Vue；`catalog-ui` 只在同框架内共享，跨框架共享 token、contracts 和设计规范 |
+| 测试 | `bun test`、已有 `tsx --test` 和 Vitest 并存；Vitest 的合理边界是 DOM/挂载/事件/组件状态，页面级 Playwright 不是默认项 | domain/API/repository/数据库/Provider/命令优先 `bun test`；已有 runner 先记录再迁移；组件测试按需 Vitest；页面形态稳定后才做 Playwright |
+| 文档与语言 | 正文文档主要集中在根 `docs/`，内容以中文为主；README 可保留英文；活动计划可能位于 `docs/superpowers/` | canonical 文档放根 `docs/`，正文中文；`docs/superpowers/` 只作为活动计划/实验临时区，稳定结论应归档到正式分类 |
+| 环境变量与数据 | 根 `.env.example` 是目标形态，但历史项目存在应用级 env；资产、运行数据、媒体、备份生命周期不同 | env 样例统一根目录；真实 secret 不入 Git；`assets/`、`data/`、运行存储、媒体和备份按生命周期分离 |
+| Docker、数据库与部署 | Dockerfile、Compose、Nginx 在历史项目中位置不同；数据库由产品形态和原系统决定 | 新项目使用 `deploy/compose`、`deploy/docker`、`deploy/nginx`；新多服务项目默认 PostgreSQL，既有项目保留自身数据库，不为目录统一强行迁移 |
+| 工作区工具 | 只有存在研究、审计或受限文档查询需求的项目才需要 `tools/`；普通项目不应为了形式创建空目录 | 研究/审计工具按需放根 `tools/<domain>/` 并写清权限、输出和人工确认；部署、备份、数据库和发布入口放 `scripts/` 或 `src/commands/` |
 
-盘点时四套业务项目均存在 Git 仓库；`dht-observer` 有既有未提交修改，其他三个项目当前未显示未提交文件。以上修改均未被本次规范审计触碰。任何实际迁移开始前都要重新执行 Git 状态检查，并避开并行修改。
+以上是规范归纳，不代表四个项目当前已经全部符合目标结构。实际迁移前仍要重新执行 Git 状态检查、引用审计和数据/部署边界检查；已有未提交修改必须保留，不得为了套用规范覆盖用户工作。
 
 ## 12. 历史项目迁移顺序
 
