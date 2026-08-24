@@ -1,42 +1,45 @@
 # puzzle-fuzzy-skill
 
-Puzzle Fuzzy's TypeScript full-stack and product-interface engineering preference skill for Codex.
+Puzzle Fuzzy 的个人 TypeScript 全栈、产品界面、Provider、桌面端和交付偏好 skill。
 
-## Priority
+## 定位
 
-This skill is a fallback decision layer. Use the following order when making an implementation choice:
+这是个人偏好层，不是通用最佳实践。使用时必须遵循：
 
-1. Follow explicit user requirements and safety constraints.
-2. Check the official documentation, standards, and security guidance for the actual technology and version.
-3. Preserve compatible architecture and conventions already present in the repository.
-4. Use this skill's preferences only when the official guidance leaves multiple reasonable options.
-5. State uncertainty and ask before making a product-direction choice when the decision remains unresolved.
+1. 当前用户要求和安全约束。
+2. 实际版本对应的官方文档、标准和安全指南。
+3. 当前仓库的架构、脚本、依赖和既有约定。
+4. 本 skill 中的个人默认。
 
-The skill must not replace an official security, compatibility, API, or platform recommendation with a personal preference.
+当这些依据仍然无法决定方案时，说明不确定性并询问，不要猜测产品方向。
 
-## Contents
+## 内容
 
-- [`SKILL.md`](SKILL.md): Codex instructions and fallback engineering preferences.
-- [`agents/openai.yaml`](agents/openai.yaml): UI metadata for the skill.
+- [SKILL.md](SKILL.md)：中文个人工程规则，包括只读审计、证据等级、Git 协作、真实产品 UI、虚拟滚动、固定高度弹窗、Lucide 图标、Electron Builder、Provider 合规、增量持久化、媒体安全和原生平台边界。
+- [agents/openai.yaml](agents/openai.yaml)：Codex 界面显示信息和默认调用提示。
 
-## Invocation
+## 调用
 
-Use `$puzzle-fuzzy-skill` when the task needs these preferences after checking official best practices.
+需要这些个人偏好时可以显式调用 `$puzzle-fuzzy-skill`。它只应作为官方最佳实践和当前项目约定之后的补充层。
 
-The skill includes conditional guidance for stable virtualized scrolling and fixed-height dialogs, user-focused frontend interactions, Lucide-only icon sources, Electron Builder packaging, and production validation. These are defaults only when they fit the existing project and explicit requirements.
+## 校验
 
-## Validation
-
-Run the Codex skill validator from the skill-creator package. Replace `<CODEX_HOME>` with the Codex home directory on the current machine.
+使用 skill-creator 提供的 validator。把 `<CODEX_HOME>` 替换为当前机器的 Codex home 路径：
 
 ```bash
 python3 <CODEX_HOME>/skills/.system/skill-creator/scripts/quick_validate.py .
 ```
 
-On Windows PowerShell, use:
+Windows PowerShell：
 
 ```powershell
 python <CODEX_HOME>\skills\.system\skill-creator\scripts\quick_validate.py .
 ```
 
-The validator checks skill structure and frontmatter; it does not replace project-specific behavioral, accessibility, browser, packaging, or production checks.
+此外还应运行：
+
+```bash
+git diff --check
+```
+
+validator 只能检查 skill 结构、frontmatter 和未完成的 scaffold 占位符，不能替代项目自身的 typecheck、test、build、浏览器、设备、Provider、打包和生产验收。
