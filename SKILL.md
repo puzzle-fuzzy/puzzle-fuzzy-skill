@@ -1,6 +1,7 @@
 ---
 name: puzzle-fuzzy-skill
 description: 仅用于 Puzzle Fuzzy 个人项目的 TypeScript 全栈、产品界面、Provider、桌面端和交付偏好；在官方文档、标准和当前仓库约定无法决定时使用。默认偏好 Bun + Turborepo monorepo、Biome、React/Vue 界面、Elysia/Hono API、Drizzle/Zod 领域代码、Electron Builder 打包和已有的 Tauri/Rust 桌面壳。
+license: MIT
 ---
 
 # puzzle-fuzzy-skill
