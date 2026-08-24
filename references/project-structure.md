@@ -170,6 +170,7 @@ JavaScript/TypeScript 项目的个人默认优先级为：
 规则：
 
 - 新的 TypeScript 全栈项目默认 Bun + Turborepo；因生态、CI 或已有仓库原因选择 pnpm/npm 时，明确记录原因。
+- `packageManager` 只决定安装器，不自动决定所有脚本的运行时；已有项目可以在 pnpm 工作区中使用 Bun 运行应用、使用 Node 运行专用文档工具，但必须按边界固定版本、记录原因，并避免让安装命令和运行命令互相替代。
 - `engines.node` 可以作为兼容性下限，但不等于额外的项目运行时；它必须和实际 CI/runtime 一致。
 - `.nvmrc` 只作为历史兼容文件保留，不能与 `.node-version` 并列成为两个事实来源；迁移完成后删除。
 - 不提交第二个锁文件，不在脚本中混用 `bun`、`pnpm`、`npm` 安装同一工作区；命令、CI、Docker 和 README 使用同一包管理器。
@@ -262,6 +263,7 @@ DATA_DIR=./data/runtime
 - 推荐分类：`docs/product/`、`docs/architecture/`、`docs/decisions/`、`docs/plans/`、`docs/runbooks/`、`docs/testing/`、`docs/research/`。
 - 根目录不再新增 `PRODUCT.md`、`DESIGN.md` 等平行文档入口；迁移时移入 `docs/product/` 或 `docs/architecture/`。可独立安装的 package/app 可以保留自己的 `README.md`，但不得复制根文档的事实。
 - `AGENTS.md` 是协作指令文件，不属于产品文档；内容也优先使用中文，并且只记录当前仓库真正有效的边界。
+- `docs/superpowers/` 可以作为正在执行的计划、实验和评估的临时工作区；完成后应把稳定结论提炼到 `docs/plans/`、`docs/decisions/`、`docs/architecture/` 或 `docs/research/`，不要让同一事实长期维护两份。
 
 ## 7. 测试、Playwright 与自动化脚本
 
@@ -309,6 +311,7 @@ scripts/
 - `scripts/` 里的脚本只做编排、边界检查和外部命令调用；业务规则放在所属 `apps/<app>/src/commands/` 或 `packages/<pkg>/src/`，避免根脚本变成第二个服务层。
 - 新代码不使用 `apps/api/src/scripts/` 存放长期命令；改用 `apps/api/src/commands/`，再由根 `scripts/db/` 或 app package script 调用。
 - `apps/<app>/scripts/` 只在构建工具强制要求 app-local entrypoint 时使用，例如浏览器扩展打包；应保持薄并在对应 README/decision 说明。
+- 根 `tools/` 是研究与审计工具的允许边界：适合外部 API/Provider 文档查询、浏览器人工检索、资料脱敏、链接/contract/迁移审计和只读证据整理。工具应有自己的 README、允许主机和输出目录说明；登录、验证码和受限文档必须人工完成，不能绕过挑战、输出凭据或把未确认材料直接写成业务 contract。数据库、部署、备份、发布等状态变更入口仍放 `scripts/` 或 app 的 `src/commands/`。
 - 自动化脚本的测试放在 `tests/` 或与 command 实现 colocate；不要将 `scripts/*.test.ts` 当作脚本入口。
 
 ## 8. Tailwind 与前端配置
@@ -373,17 +376,18 @@ deploy/
 
 UI 图标规则仍然独立生效：`assets/` 中存在图片或品牌素材，不代表可以用手写 SVG 或输入法 emoji 作为 UI icon；产品界面仍只使用 Lucide。
 
-## 11. 当前三套项目的只读盘点
+## 11. 当前四套项目的只读盘点
 
 以下是 2026-08-24 对 `/Users/yxswy/Documents/Github` 的本地证据快照，不是永久事实；后续使用前应重新检查。
 
 | 项目 | 当前事实 | 与目标规范的差异 |
 | --- | --- | --- |
-| `dht-observer` | `apps/server`；根 `Dockerfile`；`deploy/docker-compose.yml`；根 `.env.example` 和部署 env 样例；pnpm + Biome + Turbo；根 `scripts/`；server 使用 `tsx --test`、web 使用 Vitest | HTTP 应用目录、Bun 优先级、Dockerfile/Compose 文件名、根 env、脚本分组和测试 runner 需要统一；Playwright 尚未配置 |
-| `jav-media-catalog` | `apps/api`；根 `docker-compose.yml`；`infra/nginx/`；根 `assets/`、`data/`；Bun + Biome + Turbo；`packages/catalog-ui` 已被 Web/Electron 共享；各包当前使用 `bun test` | API、Bun/工具链、共享 UI 方向已符合；catalog-ui 组件测试可按需转 Vitest，Docker/Compose/Nginx、根 env、文档和脚本分组需要统一 |
-| `relay-transfer` | `apps/api`；`apps/api/.env.example`；根 `.bun-version`、`.node-version`、`.nvmrc`；根 `tailwind.config.ts`；Bun + Biome；根 `playwright.config.ts`；当前工作树已有 `packages/catalog-ui` 变更；Vitest 覆盖 unit/API/Web | env 应收拢根目录；运行时只保留 Bun；移除根 Tailwind 配置或确认 legacy 依赖；补 `turbo.json`；将 Vitest 收窄到前端组件/必要 UI 边界后再统一测试目录 |
+| `dht-observer` | `apps/server`；根 `Dockerfile`；`deploy/docker-compose.yml`；根 `.env.example`；pnpm + Biome + Turbo；根 `scripts/`；server 使用 `tsx --test`、web 使用 Vitest；当前工作树有既有未提交修改 | `apps/server`、根 Docker 入口和 pnpm 是历史边界；缺少明确 Node 版本文件；Playwright 尚未配置；不要覆盖已有未提交文件 |
+| `hospital-platform` | 小程序版本；pnpm 工作区；API/worker/小程序使用 Bun；众阳文档工具通过 Node 24 + 有界面 Playwright 供人工查询登录后 API 文档；根 `tools/` 做审计、文档接收和证据整理；`infra/docker-compose.yml`；数据库固定为原系统继承的 MySQL + Redis | MySQL/Redis 是既定产品和平台边界，不迁移为 PostgreSQL/SQLite；Bun 与 Node 需要分别固定并说明；`tools/` 是合法的研究/审计工具层，不应强行移动到 `scripts/` |
+| `jav-media-catalog` | `apps/api`；根 `docker-compose.yml`；`infra/nginx/`；根 `.env.example`、`assets/`、`data/`；Bun + Biome + Turbo；React `packages/catalog-ui` 被 Web/Electron 共享；组件测试当前使用 `bun:test`；API 仍有 `src/scripts/` | API、Bun/工具链、同框架共享 UI 方向已符合；Docker/Compose/Nginx、根 env、脚本位置和 UI 测试 runner 是后续迁移项；`simplebar-react` 不等于虚拟滚动 |
+| `relay-transfer` | `apps/api`；`apps/api/.env.example`；根 `.bun-version` 与旧 `.nvmrc`；Bun + Biome；根 `playwright.config.ts`、`vitest.config.ts`；Vue `packages/catalog-ui`；没有根 `tailwind.config.ts` 或 `turbo.json`；Vitest 覆盖 API/domain/storage/UI | env 应收拢根目录；删除已无职责的 `.nvmrc` 前要完成 Node/Bun 边界验证；新编排阶段补根 Turbo；Vitest 应收窄到前端组件或有明确 mock/runtime 理由的边界；SQLite 是当前单实例产品选择，不因 PostgreSQL 默认而迁移 |
 
-盘点时三套项目均存在 Git 仓库；当时 `dht-observer` 的 iOS 文件和 `relay-transfer` 的 workspace/验证/新包已有未提交或未跟踪修改，`jav-media-catalog` 未显示未提交文件。以上修改均未被本次规范审计触碰。任何实际迁移开始前都要重新执行 Git 状态检查，并避开并行修改。
+盘点时四套业务项目均存在 Git 仓库；`dht-observer` 有既有未提交修改，其他三个项目当前未显示未提交文件。以上修改均未被本次规范审计触碰。任何实际迁移开始前都要重新执行 Git 状态检查，并避开并行修改。
 
 ## 12. 历史项目迁移顺序
 
@@ -420,5 +424,6 @@ UI 图标规则仍然独立生效：`assets/` 中存在图片或品牌素材，�
 - 根目录 env 需要被 Vite、Bun、Compose 或外部部署工具读取，但当前启动 cwd 不一致。
 - 现有 Playwright 测试依赖 app-local config、固定端口、登录态或桌面窗口，不能直接迁移到根配置。
 - pnpm/npm 项目是否真的具备切换到 Bun 的依赖、原生模块和 CI 条件。
+- `tools/` 需要访问登录、验证码或受限 Provider 文档时，是否具备访问授权、允许主机、人工交互和脱敏输出边界；不能把未确认的文档查询结果直接当成已授权的业务 contract。
 
 提问时至少给出：当前证据、真正未知点、推荐默认、另一方案的维护代价，以及需要用户确认的最小决定。没有这些影响时可以按本规范可逆地默认执行。
