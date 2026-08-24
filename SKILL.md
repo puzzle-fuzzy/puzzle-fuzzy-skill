@@ -91,7 +91,7 @@ description: 仅用于 Puzzle Fuzzy 个人项目的 TypeScript 全栈、产品�
 以下都是适用条件下的个人默认，不是强制迁移规则：
 
 - 复杂产品、丰富状态、复杂 UI 组合、dashboard 或高级工作流优先 React；简单 CRUD、管理端、H5 和直线交互优先 Vue 3 + Vite。已有项目除非明确要求或有充分收益，不做框架迁移。
-- 单机、单实例、个人工具或控制面优先 SQLite；只有出现多实例、HA、团队协作、复杂查询、生产一致性或明确的环境一致性需求时，才考虑 Docker Compose + Postgres。不要仅因为“全栈”就引入 Postgres。
+- 新的多服务、可部署全栈项目默认使用 Docker Compose + PostgreSQL，并把数据库、迁移、健康检查和备份边界写清楚；明确的单机、离线、嵌入式或桌面工具才默认 SQLite。已有项目不为追求统一而强行迁移数据库。
 - 需要历史、恢复或审计的业务记录优先软删除、审计字段、显式 retention 和恢复规则；必须物理删除的数据、secret、隐私擦除流程和不适合软删除的高容量表除外。
 - 中间件顺序会影响行为且仓库没有既有顺序时，使用 request ID、安全 headers、logging、rate limit、CORS、static assets、error handling、auth、业务路由的稳定顺序；有既有顺序时先保留并验证影响。
 - 内部原型和早期 MVP 在诊断充分时可以 MVP 后再引入 structured logging；生产、公开、安全敏感或分布式服务要更早使用结构化日志、脱敏和 request/trace ID。
@@ -123,7 +123,7 @@ description: 仅用于 Puzzle Fuzzy 个人项目的 TypeScript 全栈、产品�
 
 - 优先维护熟悉的 TypeScript 端到端边界；不要为了“架构更高级”把业务逻辑迁移到不熟悉的 Rust 或另一个语言层。
 - 按仓库当前 package manager 工作。全局 Bun/Node/pnpm 升级不代表修改项目 `packageManager`、lockfile 或依赖；项目 pin 优先于机器默认版本。
-- 多产品面使用 `apps/*`、`services/*`、`packages/*` 的清晰边界。共享 contracts、schema、API client 和纯 domain/policy 放在 packages，纯 domain 不直接依赖 DB、Provider、storage 或 app IO。
+- 多产品面默认使用 `apps/*`、`packages/*` 的清晰边界：所有可独立运行或部署的进程（`api`、`web`、`worker`、`desktop`、`extension`、`ios`）放在 `apps/`；共享 contracts、schema、API client 和纯 domain/policy 放在 `packages/`。只有当前仓库已经采用 `services/*` 或明确需要独立的服务目录时才保留，不为套模板新增平行边界。
 - API 使用 Elysia 或 Hono 时保留现有框架；优先 `@elysia/eden`、`hono/client` 或仓库等价 typed client。使用 app factory，避免测试导入时启动 listener 或 Provider。
 - 优先使用官方或成熟的 framework integration 处理 CORS、cookies、JWT、OpenAPI、static files 等横切能力，不手写已有可靠替代方案。
 - repository 负责持久化和状态转换；service 负责权限、认证、校验、编排和业务流程。边界错误用稳定 code/class 或 discriminated result 表达。
@@ -194,7 +194,20 @@ description: 仅用于 Puzzle Fuzzy 个人项目的 TypeScript 全栈、产品�
 - 复用小型纯 helper 处理 normalization、slug validation、retry policy、path rendering、cache policy；部署和 storage 场景优先 deterministic ID、safe path、明确 cache header 和稳定 error code。
 - 为复杂概念使用直接命名的包或模块，如 `task-engine`、`workflow-engine`、`deploy-core`、`storage`、`runtime`、`api-client`、`repository`、`service`、`model`，不要把领域代码塞进一个万能 util 文件。
 - 新项目先做真实 vertical slice，不做空 scaffold；早期提供 `dev`、`build`、`typecheck`、`test`、`lint` 和 `verify` 脚本，并为实际边界写最小测试。
-- 多界面全栈项目可使用 `apps/web`、`apps/api`、`services/worker`、`packages/shared`、`packages/db`、`packages/api-client`，但目录服务于边界，不为满足模板而拆分。
+- 多界面全栈项目优先使用 `apps/web`、`apps/api`、`apps/worker`、`packages/contracts`、`packages/db`、`packages/api-client`，但目录服务于边界，不为满足模板而拆分。
+
+## 项目目录、命名与运行时统一规范
+
+这是 Puzzle Fuzzy 个人项目的新项目默认结构和渐进迁移目标。它不是要求一次性重命名所有历史项目的脚本；涉及外部路径、部署卷、用户数据或公开 package 名称时，必须先审计引用并分阶段迁移。需要规划新仓库、整理目录、统一 Docker/环境变量/运行时或判断 `api` 与 `server` 时，先阅读 [references/project-structure.md](references/project-structure.md)。
+
+- 仓库、目录和新文件默认使用小写 kebab-case；可执行应用统一放在 `apps/`，共享代码统一放在 `packages/`。
+- HTTP 服务统一使用 `apps/api`；后台常驻进程或队列消费者使用 `apps/worker`；`apps/server` 不再作为新项目目录名。已有 `server` 只有在迁移计划覆盖 package 名、workspace filter、Docker、CI、文档和外部调用后才改名。
+- 根目录只放工作区入口配置；部署 Dockerfile、Compose、Nginx 和部署环境样例统一放在 `deploy/`。`infra/` 仅用于 Terraform/OpenTofu、Ansible、Kubernetes 等基础设施即代码。
+- 根目录使用一个 `.env.example` 作为本地工作区环境变量清单；实际 `.env` 不入 Git。部署样例放在 `deploy/env/`，应用内默认不重复放 `.env.example`。
+- 一个 JavaScript/TypeScript 仓库只保留一条主要运行时链路：Bun 项目使用 `packageManager` + `.bun-version`；pnpm/Node 项目使用 `packageManager` + `.node-version`；不同时维护 `.bun-version`、`.node-version` 和 `.nvmrc`。
+- Tailwind 4 默认采用 CSS-first 配置和应用自己的 Vite 插件；没有明确兼容需求时删除根目录 `tailwind.config.ts`。Tailwind 3 或确实需要 legacy `@config` 时，配置只能放在所属前端应用目录并说明原因。
+- `assets/` 只放跨应用、需要版本控制的源资产；应用专属静态资源放在所属 `apps/<app>/public` 或 `apps/<app>/assets`。`data/` 只放脱敏 fixture 或本地运行数据约定，生产数据库、媒体、上传物和备份放在 checkout 之外。
+- 目录迁移必须先检查 Git 状态、包管理器 workspace、脚本、CI、Docker build context、挂载卷、环境变量、文档和外部路径；不得为了“统一”自动移动、重命名或删除用户数据。
 
 ## 需要询问或暂停的情况
 
