@@ -116,6 +116,8 @@ license: MIT
 
 ## 产品内容与 UI 边界
 
+- 使用 `impeccable` 进行产品界面、UX、视觉审计、重设计或交互优化前，必须先读取仓库根目录的 `PRODUCT.md`。`PRODUCT.md` 是产品目标、用户、核心流程、信息架构和视觉边界的 canonical 文档，固定放在根目录，不放入 `docs/`、`apps/` 或其他子目录。
+- 如果根目录缺少 `PRODUCT.md`、内容与当前任务冲突或无法确定产品边界，先指出具体疑问并暂停高影响 UI 决策；不得自行编造产品定位、用户、品牌文案、页面结构或视觉方向。产品决策确认后，代码、`PRODUCT.md` 和受影响的其他文档必须保持同步。
 - 优先工具型、任务型和工作台 UI：创建/加入、连接、发送、结果、重试、恢复和下一步操作要清楚，不用营销 header、重复卡片、装饰性 section 或无需求的 dashboard 取代真实功能。
 - 产品内容未定义前，不生成示例业务数据、品牌文案、假任务、假通知或 placeholder workflow；只实现明确要求的 shell、导航、组件、真实 API 和交互。
 - 真实业务流必须接通路由、API、状态、权限、加载、空态、错误、pending、只读和恢复操作。中文产品的标签、状态和错误文案保持一致，代码标识遵循仓库现有语言。
@@ -226,7 +228,7 @@ license: MIT
 - 所有 `.env.example` 和环境样例统一放在仓库根目录；实际 `.env` 不入 Git，应用和部署目录不重复维护同一变量清单。
 - 一个 JavaScript/TypeScript 仓库只保留一条主要安装链路和清晰的运行时边界：新项目优先 `packageManager` + `bun.lock` + `.bun-version`；pnpm/npm 回退项目使用对应 lockfile + `.node-version`。如果已有项目的应用运行在 Bun、而专用文档工具或平台工具必须使用 Node，可以保留多个明确隔离的运行时，但每个实际运行时都要固定版本、记录原因，不能无说明地混用或同时维护 Bun、Node 和 nvm 三套同义版本文件。
 - 新 Bun 项目使用根 `workspaces` + `turbo.json`，每个 app/package 提供标准任务，根脚本只调用 Turbo；根 `playwright.config.ts`、根 `tests/e2e/` 和根 `scripts/` 是工作区级自动化的默认位置。
-- 正文文档统一放根 `docs/` 并默认使用中文；`README.md` 可按 GitHub 读者保留英文或双语。长期命令逻辑放 `src/commands/`，工作区自动化入口按职责放根 `scripts/dev`、`scripts/db`、`scripts/verify`、`scripts/deploy`、`scripts/backup`、`scripts/release`。
+- `PRODUCT.md` 是根目录固定的产品决策文档，供 `impeccable` 和其他 UI/产品任务读取；正文工程文档统一放根 `docs/` 并默认使用中文，`README.md` 可按 GitHub 读者保留英文或双语。长期命令逻辑放 `src/commands/`，工作区自动化入口按职责放根 `scripts/dev`、`scripts/db`、`scripts/verify`、`scripts/deploy`、`scripts/backup`、`scripts/release`。
 - 只有项目确实需要只读审计、外部 API/Provider 文档研究、浏览器人工查询或脱敏资料接收时，才创建根 `tools/`；它不是每个项目的必备目录，也不是业务运行时。数据库迁移、部署、备份、发布和会改变工作区或线上状态的入口仍放在 `scripts/` 或 app 的 `src/commands/`，并保留显式确认边界。
 - Tailwind 4 默认采用 CSS-first 配置和应用自己的 Vite 插件；没有明确兼容需求时删除根目录 `tailwind.config.ts`。Tailwind 3 或确实需要 legacy `@config` 时，配置只能放在所属前端应用目录并说明原因。
 - `assets/` 只放跨应用、需要版本控制的源资产；应用专属静态资源放在所属 `apps/<app>/public` 或 `apps/<app>/assets`。`data/` 只放脱敏 fixture 或本地运行数据约定，生产数据库、媒体、上传物和备份放在 checkout 之外。

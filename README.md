@@ -15,7 +15,7 @@ Puzzle Fuzzy 的个人 TypeScript 全栈、产品界面、Provider、桌面端�
 
 ## 内容
 
-- [SKILL.md](SKILL.md)：中文个人工程规则，包括只读审计、证据等级、worktree 与分支交付、临时文件清理、代码与文档同步、真实产品 UI、虚拟滚动、固定高度弹窗、Lucide 图标、Electron Builder、Provider 合规、增量持久化、媒体安全和原生平台边界。
+- [SKILL.md](SKILL.md)：中文个人工程规则，包括只读审计、证据等级、worktree 与分支交付、临时文件清理、代码与文档同步、根目录 `PRODUCT.md` 与 `impeccable` UI 边界、真实产品 UI、虚拟滚动、固定高度弹窗、Lucide 图标、Electron Builder、Provider 合规、增量持久化、媒体安全和原生平台边界。
 - [agents/openai.yaml](agents/openai.yaml)：Codex 界面显示信息和默认调用提示。
 
 ## 调用
