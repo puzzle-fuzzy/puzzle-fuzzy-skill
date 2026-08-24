@@ -263,16 +263,35 @@ DATA_DIR=./data/runtime
 - 根目录不再新增 `PRODUCT.md`、`DESIGN.md` 等平行文档入口；迁移时移入 `docs/product/` 或 `docs/architecture/`。可独立安装的 package/app 可以保留自己的 `README.md`，但不得复制根文档的事实。
 - `AGENTS.md` 是协作指令文件，不属于产品文档；内容也优先使用中文，并且只记录当前仓库真正有效的边界。
 
-## 7. Playwright、测试与自动化脚本
+## 7. 测试、Playwright 与自动化脚本
 
-### 7.1 Playwright 位置
+### 7.1 默认测试 runner
 
-- 工作区级浏览器 E2E 统一使用根目录 `playwright.config.ts`；依赖放在根 `package.json`，脚本使用 `bunx playwright test`。
-- E2E 用例放根目录 `tests/e2e/`，跨应用 fixtures 放 `tests/fixtures/`，集成测试放 `tests/integration/`；报告和 `test-results/`、`playwright-report/` 必须 gitignore。
-- Web、Electron 或多端浏览器目标使用 Playwright `projects` 区分，不为每个 app 复制一份配置。只有一个 app 被独立发布且无法从 workspace root 启动时，才允许 app 内配置。
-- 单元测试默认与源文件 colocate；不要把单元测试和自动化脚本混在 `scripts/`。
+- 默认测试 runner 是 `bun test`，用于 domain、API、repository、数据库、Provider、命令和集成测试。
+- 每个 app/package 声明自己的 `test` 脚本，根目录通过 Turbo 编排；不要在根脚本中把每个包的测试命令写成一长串。
+- 已有项目如果使用 `tsx --test`、Node test runner 或其他成熟 runner，先保留并记录；确定迁移收益后再统一，不因为“看起来不一致”立刻引入双 runner。
 
-### 7.2 自动化脚本实际位置
+### 7.2 前端组件测试
+
+- 前端组件需要 DOM、挂载、事件交互、状态变化或渲染断言时使用 Vitest，配合 React Testing Library、Vue Test Utils 或等价工具。
+- `packages/catalog-ui` 的组件测试优先使用 Vitest；测试应覆盖组件契约、交互状态、键盘/焦点和可访问性边界，不把 API、Electron IPC 或真实路由塞进组件测试。
+- Vitest 只因为前端组件测试的运行环境和 mock 能力需要而引入，不作为所有后端/domain 测试的默认 runner。
+- 单元测试默认与源文件 colocate；跨包集成测试放根 `tests/integration/`，自动化脚本测试不能混入 `scripts/` 入口目录。
+
+### 7.3 页面级 UI 测试与 Playwright
+
+- 前端页面级 UI 测试、Playwright E2E 和视觉回归默认不做；只有页面形态、文案、布局和主要交互已经确认稳定，并且测试能表达真实验收标准时才新增。
+- 页面仍在探索、产品内容未定、布局频繁变化或只有“看起来更好”这类主观标准时，不用 Playwright 快照制造维护负担；优先测试组件、状态机和真实 API 边界。
+- 确认需要页面测试后，工作区级配置统一放根目录 `playwright.config.ts`，依赖放根 `package.json`，脚本使用 `bunx playwright test`。
+- E2E 用例放根目录 `tests/e2e/`，跨应用 fixtures 放 `tests/fixtures/`，报告和 `test-results/`、`playwright-report/` 必须 gitignore。
+- Web、Electron 或多端浏览器目标使用 Playwright `projects` 区分，不为每个 app 复制配置。只有一个 app 独立发布且无法从 workspace root 启动时，才允许 app 内配置。
+
+### 7.4 原生客户端测试
+
+- 原生 iOS 继续使用 XCTest/Swift test。
+- 页面测试规则不替代协议、domain、API、存储和安全边界测试；这些仍然优先使用 `bun test` 或对应平台 runner。
+
+### 7.5 自动化脚本实际位置
 
 根目录 `scripts/` 是工作区所有人工、CI 和运维自动化的统一入口，按职责分组：
 
@@ -360,9 +379,9 @@ UI 图标规则仍然独立生效：`assets/` 中存在图片或品牌素材，�
 
 | 项目 | 当前事实 | 与目标规范的差异 |
 | --- | --- | --- |
-| `dht-observer` | `apps/server`；根 `Dockerfile`；`deploy/docker-compose.yml`；根 `.env.example` 和部署 env 样例；pnpm + Biome + Turbo；根 `scripts/` | HTTP 应用目录、Bun 优先级、Dockerfile/Compose 文件名、根 env 和脚本分组需要统一；Playwright 尚未配置 |
-| `jav-media-catalog` | `apps/api`；根 `docker-compose.yml`；`infra/nginx/`；根 `assets/`、`data/`；Bun + Biome + Turbo；`packages/catalog-ui` 已被 Web/Electron 共享 | API、Bun/工具链、共享 UI 方向已符合；Docker/Compose/Nginx、根 env、文档和脚本分组需要统一 |
-| `relay-transfer` | `apps/api`；`apps/api/.env.example`；根 `.bun-version`、`.node-version`、`.nvmrc`；根 `tailwind.config.ts`；Bun + Biome；根 `playwright.config.ts`；当前工作树已有 `packages/catalog-ui` 变更 | env 应收拢根目录；运行时只保留 Bun；移除根 Tailwind 配置或确认 legacy 依赖；补 `turbo.json` 并迁移脚本/测试目录 |
+| `dht-observer` | `apps/server`；根 `Dockerfile`；`deploy/docker-compose.yml`；根 `.env.example` 和部署 env 样例；pnpm + Biome + Turbo；根 `scripts/`；server 使用 `tsx --test`、web 使用 Vitest | HTTP 应用目录、Bun 优先级、Dockerfile/Compose 文件名、根 env、脚本分组和测试 runner 需要统一；Playwright 尚未配置 |
+| `jav-media-catalog` | `apps/api`；根 `docker-compose.yml`；`infra/nginx/`；根 `assets/`、`data/`；Bun + Biome + Turbo；`packages/catalog-ui` 已被 Web/Electron 共享；各包当前使用 `bun test` | API、Bun/工具链、共享 UI 方向已符合；catalog-ui 组件测试可按需转 Vitest，Docker/Compose/Nginx、根 env、文档和脚本分组需要统一 |
+| `relay-transfer` | `apps/api`；`apps/api/.env.example`；根 `.bun-version`、`.node-version`、`.nvmrc`；根 `tailwind.config.ts`；Bun + Biome；根 `playwright.config.ts`；当前工作树已有 `packages/catalog-ui` 变更；Vitest 覆盖 unit/API/Web | env 应收拢根目录；运行时只保留 Bun；移除根 Tailwind 配置或确认 legacy 依赖；补 `turbo.json`；将 Vitest 收窄到前端组件/必要 UI 边界后再统一测试目录 |
 
 盘点时三套项目均存在 Git 仓库；当时 `dht-observer` 的 iOS 文件和 `relay-transfer` 的 workspace/验证/新包已有未提交或未跟踪修改，`jav-media-catalog` 未显示未提交文件。以上修改均未被本次规范审计触碰。任何实际迁移开始前都要重新执行 Git 状态检查，并避开并行修改。
 

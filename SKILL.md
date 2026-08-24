@@ -183,7 +183,10 @@ description: 仅用于 Puzzle Fuzzy 个人项目的 TypeScript 全栈、产品�
 
 ## 测试与验证
 
-- 使用仓库现有 runner：`bun test`、Vitest、Playwright、XCTest、Swift test 或项目脚本；新工作区的 Playwright 配置默认放根目录 `playwright.config.ts`，E2E 放根 `tests/e2e/`，不另起一套测试体系。
+- 默认测试 runner 是 `bun test`，用于 domain、API、repository、数据库、Provider、命令和集成测试。不要因为已经安装了 Vitest 就把所有测试都改成 Vitest。
+- 前端组件需要 DOM、组件挂载、事件交互或渲染断言时使用 Vitest（配合 React Testing Library、Vue Test Utils 或等价工具），尤其是 `packages/catalog-ui`；组件测试不等于页面级 UI 测试。
+- 前端页面级测试、Playwright E2E 和视觉回归默认不做，只有页面形态、文案、布局和主要交互已经确认稳定，并且测试能表达真实验收标准时才新增。需要时配置放根目录 `playwright.config.ts`，用例放根 `tests/e2e/`。
+- 原生客户端继续使用 XCTest/Swift test；已有项目的 tsx/node runner 先保留，只有确认迁移收益和兼容条件后才统一到 Bun。
 - Vue SFC 或前端边界先 typecheck，再 build；新增 API、状态、模板表达式、事件类型、浏览器和资源文件都要有针对性验证。
 - 业务测试覆盖权限、状态机、并发、取消、重试、资源释放、路径边界、空态、错误恢复、虚拟列表、固定弹窗、键盘焦点和追加失败；必要时加 contract/integration/browser/accessibility 测试。
 - 设备、Safari、TURN、Provider、签名、公证、安装、Windows、生产和真实媒体播放分别记录，不能用 simulator、mock、build 或历史结果替代。
