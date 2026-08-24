@@ -91,7 +91,7 @@ description: 仅用于 Puzzle Fuzzy 个人项目的 TypeScript 全栈、产品�
 以下都是适用条件下的个人默认，不是强制迁移规则：
 
 - 复杂产品、丰富状态、复杂 UI 组合、dashboard 或高级工作流优先 React；简单 CRUD、管理端、H5 和直线交互优先 Vue 3 + Vite。已有项目除非明确要求或有充分收益，不做框架迁移。
-- TypeScript 新项目的工具链默认优先级为 Bun + Turborepo + monorepo，其次是 pnpm + Turborepo，最后才是 npm；已有项目先保留实际兼容链路，不为了偏好强行换包管理器。
+- TypeScript 新项目的工具链默认优先级为 Bun + Turborepo + monorepo，其次是 pnpm + Turborepo，最后才是 npm；已有项目先保留实际兼容链路，不为了偏好强行换包管理器，但一旦确认需要调整就尽早完成，不长期维护两套工具链。
 - 新项目默认使用根目录 `biome.json`、`@biomejs/biome`、`lint` 和 `format`；不新增 ESLint/Prettier 平行规则，只有不可替代的框架规则才允许局部补充。
 - 新的多服务、可部署全栈项目默认使用 Docker Compose + PostgreSQL，并把数据库、迁移、健康检查和备份边界写清楚；明确的单机、离线、嵌入式或桌面工具才默认 SQLite。已有项目不为追求统一而强行迁移数据库。
 - 需要历史、恢复或审计的业务记录优先软删除、审计字段、显式 retention 和恢复规则；必须物理删除的数据、secret、隐私擦除流程和不适合软删除的高容量表除外。
@@ -212,6 +212,8 @@ description: 仅用于 Puzzle Fuzzy 个人项目的 TypeScript 全栈、产品�
 - 正文文档统一放根 `docs/` 并默认使用中文；`README.md` 可按 GitHub 读者保留英文或双语。长期命令逻辑放 `src/commands/`，工作区自动化入口按职责放根 `scripts/dev`、`scripts/db`、`scripts/verify`、`scripts/deploy`、`scripts/backup`、`scripts/release`。
 - Tailwind 4 默认采用 CSS-first 配置和应用自己的 Vite 插件；没有明确兼容需求时删除根目录 `tailwind.config.ts`。Tailwind 3 或确实需要 legacy `@config` 时，配置只能放在所属前端应用目录并说明原因。
 - `assets/` 只放跨应用、需要版本控制的源资产；应用专属静态资源放在所属 `apps/<app>/public` 或 `apps/<app>/assets`。`data/` 只放脱敏 fixture 或本地运行数据约定，生产数据库、媒体、上传物和备份放在 checkout 之外。
+- 发现目录、工具链、env、共享 UI、测试或脚本位置需要调整时，默认在早期一次性统一，避免长期维护旧目录/新目录、旧配置/新配置或旧实现/新实现两套代码。
+- 临时兼容层只用于不可逆数据迁移、外部公开契约、已发布客户端或无法立即切换的部署边界；必须记录原因、影响范围、删除条件和目标日期，迁移完成后立即删除。
 - 目录迁移必须先检查 Git 状态、包管理器 workspace、脚本、CI、Docker build context、挂载卷、环境变量、文档和外部路径；不得为了“统一”自动移动、重命名或删除用户数据。
 
 ## 需要询问或暂停的情况
