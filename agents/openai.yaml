@@ -1,4 +1,4 @@
 interface:
   display_name: "Puzzle Fuzzy Skill"
-  short_description: "Apply Puzzle Fuzzy's TypeScript engineering preferences."
-  default_prompt: "Use $puzzle-fuzzy-skill to implement this project with official best practices first, then my TypeScript engineering preferences."
+  short_description: "Apply Puzzle Fuzzy's TypeScript and product UI preferences."
+  default_prompt: "Use $puzzle-fuzzy-skill with official best practices first, then apply my conditional TypeScript, stable frontend interaction, Lucide icon, and Electron Builder preferences."

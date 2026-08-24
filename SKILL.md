@@ -1,6 +1,6 @@
 ---
 name: puzzle-fuzzy-skill
-description: Apply Puzzle Fuzzy's TypeScript full-stack engineering preferences as a fallback decision layer. Use when creating, editing, reviewing, or explaining TypeScript/JavaScript projects, especially Bun or pnpm monorepos, React/Vite frontends, Elysia or Hono APIs, Drizzle/Zod domain code, deployment tools, Electron apps, or Tauri/Rust desktop shells for this user.
+description: Apply Puzzle Fuzzy's TypeScript full-stack and product-interface preferences as a fallback decision layer. Use when creating, editing, reviewing, or explaining TypeScript/JavaScript projects, especially Bun or pnpm monorepos, React/Vue frontends with long lists or dialogs, Elysia or Hono APIs, Drizzle/Zod domain code, Electron Builder packaging, or existing Tauri/Rust desktop shells for this user.
 ---
 
 # puzzle-fuzzy-skill
@@ -23,6 +23,28 @@ Do not replace an official security, compatibility, API, or platform recommendat
 
 The user is a TypeScript full-stack engineer. They sometimes use Tauri/Rust and Electron; treat Rust as familiar but not the user's deepest area unless the repo clearly asks for it.
 
+## Task Workflow And Definition Of Done
+
+For implementation, review, or diagnosis work, use this workflow unless the repository has a stronger established process:
+
+1. Inspect the worktree, branch, remotes, package manager, workspace layout, scripts, framework versions, and existing validation commands before changing files. Preserve unrelated changes and identify ownership conflicts.
+2. Check version-aligned official documentation, standards, and security guidance for the technology involved. Record important tradeoffs when a personal default wins over another reasonable option.
+3. Trace the real end-to-end flow and define the smallest compatible change. Keep product-direction choices, migrations, framework changes, and deployment changes explicit.
+4. Implement with typed boundaries, observable failure states, and tests at the narrowest useful layer. Do not add invented product data, placeholder workflows, or decorative UI that the requirement does not need.
+5. Validate in increasing scope: focused tests, typecheck, lint/build, integration or browser checks, then the repository's `verify`/release gate. Label device, browser, provider, production, and other unrun checks separately.
+6. Inspect the final diff and status. When a problem is resolved or the requested task is complete, make an atomic Git commit if the repository is under Git; initialize Git only when it is absent. Push only when the task and repository workflow authorize it, and never include secrets, temporary files, or unrelated work.
+
+## Conditional Defaults
+
+These are defaults only when the stated conditions fit the product and repository:
+
+- For a complex product with rich state, dense UI composition, dashboards, or advanced workflows, prefer React. For simpler CRUD, admin, H5, or straightforward interaction surfaces, Vue 3 + Vite remains a good default. Preserve an existing framework unless migration is requested or clearly justified.
+- For user-facing records that need history, recovery, or auditability, prefer soft deletion with explicit retention and restore rules. Do not use soft deletion for data that must be physically erased, secrets, privacy-erasure workflows, or tables where it creates unacceptable query and uniqueness costs.
+- For a persisted local full-stack product with multiple services, default to Docker Compose + Postgres when the team needs production-like relational behavior. Use SQLite or another database when single-instance operation, embedded deployment, cost, or the repository's existing architecture makes it the better fit.
+- When middleware order affects behavior and the framework/repository has no established order, use a consistent order such as request ID, security headers, logging, rate limit, CORS, static assets, error handling, auth, and business routes. Do not reorder an existing stack without evidence.
+- For early prototypes and internal MVPs, defer structured logging until after the MVP if diagnostics remain adequate. Production-facing, security-sensitive, distributed, or externally operated services need structured logs and redaction earlier.
+- For new desktop applications, prefer Electron with `electron-builder` for packaging and distribution. Do not introduce Electron Forge unless the project already uses it or a specific capability justifies it. Prefer Electron over a new Tauri shell when avoiding a large native toolchain or unfamiliar Rust maintenance is an explicit concern. Preserve existing Tauri applications unless migration is requested.
+
 ## Fallback Preferences
 
 - Inspect the repository before changing code. Identify package manager, workspace layout, scripts, linting, typecheck, test runner, and naming conventions.
@@ -39,7 +61,7 @@ The user is a TypeScript full-stack engineer. They sometimes use Tauri/Rust and 
 - Use Elysia or Hono naturally for APIs; preserve whichever the project already uses.
 - Preserve end-to-end TypeScript contracts between frontend and backend. For Elysia APIs, prefer `@elysia/eden`; for Hono APIs, prefer `hono/client` or the repo's equivalent typed client.
 - Prefer app factories for testability. Avoid top-level `listen` or provider startup in modules that tests import.
-- Register middleware intentionally: OpenAPI/docs, logging, request ID, security headers, rate limit, CORS, static assets, error handling, auth, then business routes, unless the repo has a different established order.
+- Register middleware intentionally. If there is no established order, use request ID, security headers, logging, rate limit, CORS, static assets, error handling, auth, then business routes; otherwise preserve the repository's order and verify the security and control-flow implications.
 - Prefer official or mature framework integrations over hand-written infrastructure. For Elysia CORS, use `@elysia/cors` instead of custom CORS handling; apply the same principle to cookies, JWT, OpenAPI, static files, and similar cross-cutting middleware.
 - Prefer services with dependency-injected repositories/adapters over direct hard-coded infrastructure calls.
 - Keep repositories responsible for persistence and state transitions. Keep services responsible for permissions, auth, orchestration, validation, and business flow.
@@ -48,22 +70,38 @@ The user is a TypeScript full-stack engineer. They sometimes use Tauri/Rust and 
 - Fail fast for missing or unsafe production environment variables. In development, warnings are acceptable when the project already uses that style.
 - Add security headers, strict CORS, request IDs, access logs, and metrics around public APIs when building production-facing services.
 - Use Drizzle for Postgres schemas and queries when already present. Keep enum/string literal sources of truth shared with API/frontend types when feasible.
-- For database-backed products, prefer soft deletion, audit columns, partial unique indexes, idempotency keys, explicit status fields, and indexes matching the main query paths.
+- For database-backed products, when records need history or recovery, prefer soft deletion with audit columns, partial unique indexes, explicit retention, and restore rules; otherwise choose physical deletion or another lifecycle deliberately. Use idempotency keys, explicit status fields, and indexes matching the main query paths when those behaviors apply.
 - Use Zod, Elysia `t`, or existing schema tooling for request/response/domain validation. Derive types from schemas instead of duplicating shapes.
 - Prefer small pure helpers for normalization, slug validation, retry policy, path rendering, cache policy, and similar domain rules.
 - Make time, randomness, storage roots, sessions, providers, and external clients injectable in testable code.
 
+### API Evolution
+
+- Define stable request and response schemas at every external boundary. Use explicit pagination, filtering, sorting, maximum page sizes, and bounded query cost for collection endpoints.
+- Make retries safe with idempotency keys or deterministic deduplication where a request can create, charge, publish, upload, or enqueue work.
+- Keep error responses machine-readable with stable codes and human-readable recovery guidance. Version or deprecate breaking contracts deliberately and test typed clients against the contract.
+- Sign and timestamp webhooks, reject replays, and keep provider callbacks idempotent. Do not treat an OpenAPI document as proof of an implemented capability without route and integration evidence.
+
 ## Frontend Style
 
 - Choose frontend framework by project complexity. Use Vue 3 + Vite for simpler projects, admin/H5 surfaces, and straightforward CRUD or interaction flows. Use React + Vite for more complex products because its ecosystem is more complete for rich state, UI composition, dashboards, typed clients, and advanced product workflows.
-- Use Tailwind, shadcn-style components, Radix/Base UI patterns, and lucide-react icons when present.
+- Use the repository's established UI system. Tailwind, shadcn-style components, Radix/Base UI patterns, and Lucide integrations are good options when they fit; do not introduce a second component or icon system without a reason.
 - Build practical product UI first: dashboards, consoles, deploy tools, upload flows, admin views, and dense operational screens should be compact, direct, and usable.
 - Prefer feature folders and hooks for client behavior: `features/*`, `shared/*`, `components/ui/*`, `pages/*`, or the local equivalent.
 - Use typed API clients and React Query/Zustand only when the project has already introduced them or the workflow clearly benefits.
 - For H5, WeChat, screen, or event-interaction projects, isolate SDK/auth/pay/websocket/device-detection logic into packages or composables/hooks instead of burying it inside pages.
 - Include loading, empty, error, read-only, permission, and pending states for user-facing workflows.
 - Preserve i18n/theme support if present. Do not introduce visible instructional copy unless the UI needs it.
-- For UI changes, verify responsive behavior and text overflow in compact layouts.
+- For UI changes, verify responsive behavior, text overflow, keyboard use, focus movement, reduced motion, touch targets, and screen-reader semantics in compact layouts.
+
+### Scrolling, Dialogs, And Icons
+
+- For long lists, grids, tables, feeds, sidebars, and log streams, prefer virtual scrolling when the item count or rendering cost warrants it. In React, choose a maintained virtualizer that fits the repository; `simplebar-react` can help with scrollbar presentation but is not itself a virtualization requirement. In Vue, `vue-virtual-scroller` is a candidate, not a mandatory dependency.
+- Do not use an unstyled browser-native scrollbar as the intended visual presentation for product surfaces. Prefer a deliberate custom scroll container, especially when native scrollbar gutters change layout or make the page visually jump. Keep geometry stable, reserve scrollbar space where appropriate, and preserve wheel, trackpad, touch, keyboard, focus, screen-reader, resize, and reduced-motion behavior. If a platform or accessibility constraint requires native scrolling, stabilize it with techniques such as `scrollbar-gutter: stable`; never remove scrolling semantics merely to hide a scrollbar.
+- Dialogs should use a fixed or breakpoint-stable outer height when their contents can change. Put dynamic content, loading states, errors, and long forms inside an internal scroll region; keep the title, actions, and footer anchored so status changes do not resize or move the dialog. On small viewports, use a viewport-constrained shell with stable geometry rather than content-driven height.
+- Use virtual scrolling inside a dialog when the dialog contains a long selectable list, table, history, or result set. Recalculate only the internal viewport, not the outer dialog height.
+- Use Lucide as the only icon source: `lucide-react` for React, `lucide-vue-next` or the repository's official Lucide integration for Vue, and the matching official package for other supported frameworks. Do not hand-write SVG icons, import unrelated icon packs, or use input-method emoji as icons. Lucide's internal SVG rendering is acceptable; the restriction is on manual or mixed icon sources.
+- Treat interaction feedback as part of the feature: make the primary action clear, prevent duplicate submissions, show pending/success/failure states, preserve user input on recoverable errors, and provide undo or cancellation when an operation is reversible. Use optimistic updates only when rollback is defined.
 
 ## Workers And Providers
 
@@ -72,6 +110,8 @@ The user is a TypeScript full-stack engineer. They sometimes use Tauri/Rust and 
 - Route provider calls through registries/runners instead of scattering provider-specific logic through services.
 - Add provider health/degradation policy when model calls can fail repeatedly. Keep the policy pure and let DB/app layers persist or enforce it.
 - Use SSE, database notifications, or an event bus for live status updates when a task lifecycle is visible to the frontend.
+- Define task delivery semantics explicitly: at-least-once work needs idempotent handlers, deduplication, bounded retries, dead-letter or manual recovery, and graceful shutdown. Add claim expiry, heartbeat, backpressure, concurrency limits, and cancellation where the workload can outlive a request.
+- Give external providers timeouts, retry budgets, circuit recovery, cost/quota limits, redacted diagnostics, and injectable test adapters. Never log provider secrets or unbounded request/response bodies.
 
 ## Production Readiness
 
@@ -85,12 +125,25 @@ The user is a TypeScript full-stack engineer. They sometimes use Tauri/Rust and 
 - Add a top-level `verify` or equivalent script when a repo grows: boundary checks, typecheck, lint, unit tests, and focused integration tests should be easy to run together.
 - Favor graceful degradation over silent failure for external systems: retries with backoff, circuit/degradation state, user-facing recovery guidance, and diagnostics that can be copied into support/debug flows.
 
+### Security And Data
+
+- Threat-model public and privileged boundaries for XSS, CSRF, SSRF, request smuggling, path traversal, unsafe deserialization, resource exhaustion, and dependency or supply-chain compromise. Use framework and platform security primitives instead of hand-rolled equivalents.
+- Keep secrets server-side, redact tokens and personal data from logs and diagnostics, rotate credentials, and make session/device revocation auditable. Use CSP, secure cookie settings, origin checks, and explicit CORS rules when applicable.
+- Treat uploads, archives, image processing, and static file serving as hostile-input boundaries. Enforce size, count, type, path, decompression, and timeout limits and isolate storage behind an adapter.
+- Define data retention, physical deletion, backups, restore tests, migration rollback or forward-fix strategy, and privacy-erasure behavior before shipping a persistent product.
+
+### Delivery And Operations
+
+- Keep CI and release checks reproducible: lock dependencies, run the repository's verification gates, build the exact release artifact, and record runtime/framework versions.
+- Separate readiness from liveness, expose safe health diagnostics, propagate request or trace IDs, and define useful metrics, alerts, and log-redaction rules for operated services.
+- For Electron, document `electron-builder` targets, signing/notarization, auto-update policy, native permissions, crash diagnostics, and platform-specific acceptance checks. Do not claim a packaged or installed client is verified merely because a build artifact exists.
+
 ## Desktop Style
 
 - For Electron, keep `main`, `preload`, and `renderer` separated. Use `contextBridge`, typed window bridges, `contextIsolation: true`, and IPC methods that mirror the typed client surface.
 - Keep native-only capabilities in an explicit bridge namespace, such as file picking, upload-by-path, notifications, auth expiration, server configuration, and external links.
 - Handle lifecycle details carefully: single-instance lock, close-to-tray, dev-server retry, parent-process death, and broken pipe guards where relevant.
-- For Tauri, do not overbuild Rust business logic unless the repo already does. It is acceptable to keep Rust as a thin shell and put most product logic in TypeScript.
+- For new desktop products, use Electron Builder as the default packaging path and keep native-only capabilities behind the bridge. For Tauri, do not overbuild Rust business logic unless the repo already does; preserve an existing Tauri shell and put most product logic in TypeScript unless the task requires a migration.
 - When adding Rust, keep commands small, typed, and easy to audit.
 
 ## Testing And Validation
@@ -100,6 +153,8 @@ The user is a TypeScript full-stack engineer. They sometimes use Tauri/Rust and 
 - For monorepos, run the narrow package test first, then `typecheck`, `lint`, or the repo's `verify`/`check` script if available.
 - Keep type-only tests (`*.test-d.ts`) when the contract itself is the behavior.
 - Preserve and extend existing helpers/fixtures instead of creating parallel test harnesses.
+- Test long-list virtualization, fixed dialog geometry, loading/error transitions, keyboard and focus behavior, and responsive overflow when those are affected. Add accessibility, contract, integration, and browser tests at the boundary where the failure would be visible.
+- Validate both behavior and evidence: a successful build proves compilation, not installation, provider access, physical-device behavior, production configuration, or release acceptance.
 
 ## Code Shape
 
@@ -122,7 +177,8 @@ The user is a TypeScript full-stack engineer. They sometimes use Tauri/Rust and 
   - `packages/db` for Drizzle schema and database helpers.
   - `packages/api-client` for typed client access.
 - Add scripts for `dev`, `build`, `typecheck`, `test`, and `lint` early.
-- Use Docker Compose for local Postgres when the app needs persistence.
+- Use Docker Compose for local Postgres when the app needs persisted relational behavior and the conditional default fits; do not add it solely to satisfy this skill.
+- For a new Electron application, use `electron-builder` scripts for development packaging and release targets when desktop distribution is in scope.
 
 ## Ask When Unclear
 

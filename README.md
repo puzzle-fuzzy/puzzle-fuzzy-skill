@@ -1,6 +1,6 @@
 # puzzle-fuzzy-skill
 
-Puzzle Fuzzy's TypeScript full-stack engineering preference skill for Codex.
+Puzzle Fuzzy's TypeScript full-stack and product-interface engineering preference skill for Codex.
 
 ## Priority
 
@@ -23,10 +23,20 @@ The skill must not replace an official security, compatibility, API, or platform
 
 Use `$puzzle-fuzzy-skill` when the task needs these preferences after checking official best practices.
 
+The skill includes conditional guidance for stable virtualized scrolling and fixed-height dialogs, user-focused frontend interactions, Lucide-only icon sources, Electron Builder packaging, and production validation. These are defaults only when they fit the existing project and explicit requirements.
+
 ## Validation
 
-Run the Codex skill validator from the skill-creator package:
+Run the Codex skill validator from the skill-creator package. Replace `<CODEX_HOME>` with the Codex home directory on the current machine.
+
+```bash
+python3 <CODEX_HOME>/skills/.system/skill-creator/scripts/quick_validate.py .
+```
+
+On Windows PowerShell, use:
 
 ```powershell
-python C:\Users\18267\.codex\skills\.system\skill-creator\scripts\quick_validate.py .
+python <CODEX_HOME>\skills\.system\skill-creator\scripts\quick_validate.py .
 ```
+
+The validator checks skill structure and frontmatter; it does not replace project-specific behavioral, accessibility, browser, packaging, or production checks.
