@@ -1,6 +1,6 @@
 ---
 name: puzzle-fuzzy-skill
-description: 仅用于 Puzzle Fuzzy 个人项目的 TypeScript 全栈、产品界面、Provider、桌面端和交付偏好；在官方文档、标准和当前仓库约定无法决定时使用。默认偏好 Bun + Turborepo monorepo、Biome、React/Vue 界面、Elysia/Hono API、Drizzle/Zod 领域代码、Electron Builder 打包和已有的 Tauri/Rust 桌面壳。
+description: 仅用于 Puzzle Fuzzy 个人项目的 TypeScript 全栈、产品界面、Provider、桌面端和交付偏好；在官方文档、标准和当前仓库约定无法决定时使用。默认偏好 Bun + Turborepo monorepo、Biome、React/Vue 界面、Elysia API（只有需要兼容 Node 时采用 Hono）、Drizzle/Zod 领域代码、Electron Builder 打包和已有的 Tauri/Rust 桌面壳。
 license: MIT
 ---
 
@@ -106,7 +106,8 @@ license: MIT
 
 - 复杂产品、丰富状态、复杂 UI 组合、dashboard 或高级工作流优先 React；简单 CRUD、管理端、H5 和直线交互优先 Vue 3 + Vite。已有项目除非明确要求或有充分收益，不做框架迁移。
 - TypeScript 新项目的工具链默认优先级为 Bun + Turborepo + monorepo，其次是 pnpm + Turborepo，最后才是 npm；已有项目先保留实际兼容链路，不为了偏好强行换包管理器，但一旦确认需要调整就尽早完成，不长期维护两套工具链。
-- 新项目默认使用根目录 `biome.json`、`@biomejs/biome`、`lint` 和 `format`；不新增 ESLint/Prettier 平行规则，只有不可替代的框架规则才允许局部补充。
+- 新项目默认使用根目录 `biome.json`、`@biomejs/biome`、`lint` 和 `format`；不新增 ESLint/Prettier 平行规则，只有不可替代的框架规则才允许局部补充。已有项目先遵循现有工具链，不为统一偏好强行迁移。
+- 新项目的 HTTP API 默认使用 Bun 优先的 Elysia；只有存在明确的 Node runtime 或 Node 生态兼容要求时，才选择 Hono。已有 Elysia/Hono 项目先保留现有框架，除非用户明确要求迁移或兼容性证据要求改变。
 - 新的多服务、可部署全栈项目默认使用 Docker Compose + PostgreSQL，并把数据库、迁移、健康检查和备份边界写清楚；明确的单机、离线、嵌入式或桌面工具才默认 SQLite。已有项目以现有系统、产品和外部契约的数据库边界为准，不为追求统一而强行迁移数据库。
 - 需要历史、恢复或审计的业务记录优先软删除、审计字段、显式 retention 和恢复规则；必须物理删除的数据、secret、隐私擦除流程和不适合软删除的高容量表除外。
 - 中间件顺序会影响行为且仓库没有既有顺序时，使用 request ID、安全 headers、logging、rate limit、CORS、static assets、error handling、auth、业务路由的稳定顺序；有既有顺序时先保留并验证影响。
@@ -143,7 +144,7 @@ license: MIT
 - 优先维护熟悉的 TypeScript 端到端边界；不要为了“架构更高级”把业务逻辑迁移到不熟悉的 Rust 或另一个语言层。
 - 按仓库当前 package manager 工作。新项目按 [references/project-structure.md](references/project-structure.md) 使用 Bun + Turborepo monorepo；全局 Bun/Node/pnpm 升级不代表修改项目 `packageManager`、lockfile 或依赖；项目 pin 优先于机器默认版本。
 - 多产品面默认使用 `apps/*`、`packages/*` 的清晰边界：所有可独立运行或部署的进程（`api`、`web`、`worker`、`desktop`、`extension`、`ios`）放在 `apps/`；共享 contracts、schema、API client 和纯 domain/policy 放在 `packages/`。只有当前仓库已经采用 `services/*` 或明确需要独立的服务目录时才保留，不为套模板新增平行边界。
-- API 使用 Elysia 或 Hono 时保留现有框架；优先 `@elysia/eden`、`hono/client` 或仓库等价 typed client。使用 app factory，避免测试导入时启动 listener 或 Provider。
+- 新建 API 默认使用 Elysia；优先 `@elysia/eden` 或仓库等价 typed client。只有 API 必须兼容 Node runtime 或 Node 生态时才使用 Hono，并配合 `hono/client`。已有 API 保留当前框架；两者都使用 app factory，避免测试导入时启动 listener 或 Provider。
 - 优先使用官方或成熟的 framework integration 处理 CORS、cookies、JWT、OpenAPI、static files 等横切能力，不手写已有可靠替代方案。
 - repository 负责持久化和状态转换；service 负责权限、认证、校验、编排和业务流程。边界错误用稳定 code/class 或 discriminated result 表达。
 - 对外契约使用运行时 schema 和 TypeScript 类型，集合接口明确分页、排序、筛选、最大查询量和 cursor；会重试的创建、计费、上传、发布和入队操作使用 idempotency key 或确定性去重。
