@@ -1,6 +1,6 @@
 ---
 name: puzzle-fuzzy-skill
-description: 仅用于 Puzzle Fuzzy 个人项目的 TypeScript 全栈、产品界面、Provider、桌面端和交付偏好；在官方文档、标准和当前仓库约定无法决定时使用。默认偏好 Bun + Turborepo monorepo、Biome、React/Vue 界面、Elysia API（只有需要兼容 Node 时采用 Hono）、Drizzle/Zod 领域代码、Electron Builder 打包和已有的 Tauri/Rust 桌面壳。
+description: 仅用于 Puzzle Fuzzy 个人项目的 TypeScript 全栈、产品界面、Provider、桌面端、简单 Bun 脚本和交付偏好；在官方文档、标准和当前仓库约定无法决定时使用。复杂全栈项目默认偏好 Bun + Turborepo monorepo、Biome、React/Vue 界面、Elysia API（只有需要兼容 Node 时采用 Hono）、Drizzle/Zod 领域代码、Electron Builder 打包和已有的 Tauri/Rust 桌面壳；简单脚本保持最小结构。
 license: MIT
 ---
 
@@ -34,7 +34,7 @@ license: MIT
 
 在进度汇报、审计、维护或改代码前，先只读检查：
 
-- 当前目录、Git 状态、分支、远程、最近提交和是否存在并行工作。
+- 当前目录；如果目标已在 Git 仓库中，再检查 Git 状态、分支、远程、最近提交和是否存在并行工作。
 - 仓库结构、package manager、workspace、运行时版本、环境变量、脚本、lint、typecheck、test、build 和 verify 入口。
 - 当前实现、文档、测试和调用链是否一致。不要只重复 README 或目录名。
 - 如果仓库根目录存在 `.codegraph/`，先使用 CodeGraph 定位符号和调用路径，再使用 `rg` 或读取文件。
@@ -60,12 +60,13 @@ license: MIT
 
 ### Git 交付
 
-- 任务开始前先确认目标仓库，避免在已有父仓库内部错误地嵌套 `git init`。
+- 简单脚本或一次性工具默认只保留本地目录并使用 `bun run` 执行，不初始化 Git、不创建 GitHub 远程仓库，也不套用 monorepo、`apps/`、`packages/`、数据库、Docker 或部署层；只有用户明确要求版本管理、协作、发布或远程备份时才建立仓库和对应流程。
+- 任务开始前先确认目标目录；如果任务需要纳入现有 Git 仓库，再确认仓库边界，避免在已有父仓库内部错误地嵌套 `git init`。
 - Codex 可能使用 Git worktree；开始任务时检查 `git worktree list`、当前 worktree、分支归属和各 worktree 的工作区状态，不要把其他 worktree 的修改误认为当前任务的修改。
-- 任务完成或问题修复后，检查完整 diff、`git diff --check` 和 status，原子提交本次相关文件；不要提交 secrets、环境文件、生成产物或无关修复。
+- 对已存在的 Git 仓库或用户明确要求纳入 Git 的项目，任务完成或问题修复后检查完整 diff、`git diff --check` 和 status，原子提交本次相关文件；不要提交 secrets、环境文件、生成产物或无关修复。
 - 只 stage 当前任务的文件。根验证被无关修改阻塞时，保留并明确归因，不为了全绿修改无关区域。
 - 拉取主分支默认先检查工作区，再使用 `git pull --ff-only`；push 被拒绝时 fetch、检查远端提交并安全合并，未经明确授权不要 force push。
-- 代码、业务逻辑或文档处理完成后，默认将当前工作分支合并到 `main`，在 `main` 上完成最终验证后再 push；如果 `main` 受保护、存在未解决冲突、远端发生分叉或合并会改变未确认的发布边界，必须先报告证据并询问。
+- 对已存在且已纳入远程协作的 Git 仓库，代码、业务逻辑或文档处理完成后默认将当前工作分支合并到 `main`，在 `main` 上完成最终验证后再 push；如果 `main` 受保护、存在未解决冲突、远端发生分叉或合并会改变未确认的发布边界，必须先报告证据并询问。简单脚本未满足上一条 Git 条件时不执行这些步骤。
 - 合并并 push 后重新检查本地与远端 refs、`git status --short --branch` 和 worktree 状态。确认分支已经合并、没有未提交修改且没有被其他 worktree 使用后，删除明确不再需要的本地分支；不要删除当前分支、未合并分支、仍被 worktree 使用的分支或用户要求保留的实验分支。
 - 代码或文档任务结束时，检查并删除本次任务确认不再使用的临时文件、压缩包、补丁、下载物、构建产物和重复生成目录；删除前确认它们不是用户数据、运行时数据、数据库 volume、备份、secret、Provider 快照或其他任务的输入。无法确认用途时先询问，不要用清理命令制造“干净”。
 - 不再需要的 worktree 只能在其工作区已确认干净且没有未合并提交后移除；对已经失效的 worktree 元数据才使用 `git worktree prune`。仓库无 Git 时才初始化；存在远程且当前任务授权发布时，提交后 push，并核对本地和远程 refs。
@@ -105,7 +106,7 @@ license: MIT
 以下都是适用条件下的个人默认，不是强制迁移规则：
 
 - 复杂产品、丰富状态、复杂 UI 组合、dashboard 或高级工作流优先 React；简单 CRUD、管理端、H5 和直线交互优先 Vue 3 + Vite。已有项目除非明确要求或有充分收益，不做框架迁移。
-- TypeScript 新项目的工具链默认优先级为 Bun + Turborepo + monorepo，其次是 pnpm + Turborepo，最后才是 npm；已有项目先保留实际兼容链路，不为了偏好强行换包管理器，但一旦确认需要调整就尽早完成，不长期维护两套工具链。
+- 多应用或全栈 TypeScript 新项目的工具链默认优先级为 Bun + Turborepo + monorepo，其次是 pnpm + Turborepo，最后才是 npm；简单脚本项目默认只使用 Bun 和脚本自身需要的最小配置，不引入 Turborepo、workspace 或应用分层。已有项目先保留实际兼容链路，不为了偏好强行换包管理器，但一旦确认需要调整就尽早完成，不长期维护两套工具链。
 - 新项目默认使用根目录 `biome.json`、`@biomejs/biome`、`lint` 和 `format`；不新增 ESLint/Prettier 平行规则，只有不可替代的框架规则才允许局部补充。已有项目先遵循现有工具链，不为统一偏好强行迁移。
 - 新项目的 HTTP API 默认使用 Bun 优先的 Elysia；只有存在明确的 Node runtime 或 Node 生态兼容要求时，才选择 Hono。已有 Elysia/Hono 项目先保留现有框架，除非用户明确要求迁移或兼容性证据要求改变。
 - 新的多服务、可部署全栈项目默认使用 Docker Compose + PostgreSQL，并把数据库、迁移、健康检查和备份边界写清楚；明确的单机、离线、嵌入式或桌面工具才默认 SQLite。已有项目以现有系统、产品和外部契约的数据库边界为准，不为追求统一而强行迁移数据库。
@@ -142,7 +143,7 @@ license: MIT
 ## TypeScript、包边界与后端
 
 - 优先维护熟悉的 TypeScript 端到端边界；不要为了“架构更高级”把业务逻辑迁移到不熟悉的 Rust 或另一个语言层。
-- 按仓库当前 package manager 工作。新项目按 [references/project-structure.md](references/project-structure.md) 使用 Bun + Turborepo monorepo；全局 Bun/Node/pnpm 升级不代表修改项目 `packageManager`、lockfile 或依赖；项目 pin 优先于机器默认版本。
+- 按仓库当前 package manager 工作。多应用新项目按 [references/project-structure.md](references/project-structure.md) 使用 Bun + Turborepo monorepo；简单脚本只使用 Bun 运行脚本和必要依赖，不为了套用工作区模板添加额外层级。全局 Bun/Node/pnpm 升级不代表修改项目 `packageManager`、lockfile 或依赖；项目 pin 优先于机器默认版本。
 - 多产品面默认使用 `apps/*`、`packages/*` 的清晰边界：所有可独立运行或部署的进程（`api`、`web`、`worker`、`desktop`、`extension`、`ios`）放在 `apps/`；共享 contracts、schema、API client 和纯 domain/policy 放在 `packages/`。只有当前仓库已经采用 `services/*` 或明确需要独立的服务目录时才保留，不为套模板新增平行边界。
 - 新建 API 默认使用 Elysia；优先 `@elysia/eden` 或仓库等价 typed client。只有 API 必须兼容 Node runtime 或 Node 生态时才使用 Hono，并配合 `hono/client`。已有 API 保留当前框架；两者都使用 app factory，避免测试导入时启动 listener 或 Provider。
 - 优先使用官方或成熟的 framework integration 处理 CORS、cookies、JWT、OpenAPI、static files 等横切能力，不手写已有可靠替代方案。
@@ -211,24 +212,25 @@ license: MIT
 
 ## 代码形态与新项目
 
+- 如果任务只是一个或少量可直接运行的脚本，没有 API、UI、长期服务、数据库或部署需求，默认创建最小可运行目录：脚本文件、必要的 `package.json`/依赖和必要的配置即可；使用 `bun run` 执行。需要格式化或 lint 时仍优先使用 Biome，但只添加必要的 `biome.json`，不预先设计完整应用架构；测试或 README 也按真实需求添加。
 - 遵循当前仓库的分号、引号、尾逗号、注释语言和目录约定。边界输入使用 `unknown` 加 narrowing，适当使用 `as const`、`satisfies`、discriminated union 和 runtime schema，避免无依据的 `any`。
 - 将时间、随机数、storage root、session、Provider、外部 client 和浏览器 runtime 注入测试；纯规则保持无 IO。
 - 复用已有的 `biome.json`、tsconfig、Tailwind、lint-staged、Husky、Turbo 等工程配置；新项目默认不引入 ESLint/Prettier，不要在局部 package 中复制出平行配置。
 - 复用小型纯 helper 处理 normalization、slug validation、retry policy、path rendering、cache policy；部署和 storage 场景优先 deterministic ID、safe path、明确 cache header 和稳定 error code。
 - 为复杂概念使用直接命名的包或模块，如 `task-engine`、`workflow-engine`、`deploy-core`、`storage`、`runtime`、`api-client`、`repository`、`service`、`model`，不要把领域代码塞进一个万能 util 文件。
-- 新项目先做真实 vertical slice，不做空 scaffold；早期提供 `dev`、`build`、`typecheck`、`test`、`lint` 和 `verify` 脚本，并为实际边界写最小测试。
+- 多文件应用或服务先做真实 vertical slice，不做空 scaffold；早期提供 `dev`、`build`、`typecheck`、`test`、`lint` 和 `verify` 脚本，并为实际边界写最小测试。简单脚本只提供实际需要的运行和验证命令，不为了形式完整而添加空的任务脚本。
 - 多界面全栈项目优先使用 `apps/web`、`apps/api`、`apps/worker`、`packages/contracts`、`packages/db`、`packages/api-client`，但目录服务于边界，不为满足模板而拆分。
 
 ## 项目目录、命名与运行时统一规范
 
-这是 Puzzle Fuzzy 个人项目的新项目默认结构和渐进迁移目标。它不是要求一次性重命名所有历史项目的脚本；涉及外部路径、部署卷、用户数据或公开 package 名称时，必须先审计引用并分阶段迁移。需要规划新仓库、整理目录、统一 Docker/环境变量/运行时或判断 `api` 与 `server` 时，先阅读 [references/project-structure.md](references/project-structure.md)。
+这是 Puzzle Fuzzy 个人项目中多应用、全栈和可部署项目的新项目默认结构与渐进迁移目标。简单脚本不适用本节，不需要为了目录统一创建工作区层级。它也不是要求一次性重命名所有历史项目的脚本；涉及外部路径、部署卷、用户数据或公开 package 名称时，必须先审计引用并分阶段迁移。需要规划新仓库、整理目录、统一 Docker/环境变量/运行时或判断 `api` 与 `server` 时，先阅读 [references/project-structure.md](references/project-structure.md)。
 
 - 仓库、目录和新文件默认使用小写 kebab-case；可执行应用统一放在 `apps/`，共享代码统一放在 `packages/`。
 - HTTP 服务统一使用 `apps/api`；后台常驻进程或队列消费者使用 `apps/worker`；`apps/server` 不再作为新项目目录名。已有 `server` 只有在迁移计划覆盖 package 名、workspace filter、Docker、CI、文档和外部调用后才改名。
 - 根目录只放工作区入口配置；部署 Dockerfile、Compose、Nginx 和部署环境样例统一放在 `deploy/`。`infra/` 仅用于 Terraform/OpenTofu、Ansible、Kubernetes 等基础设施即代码。
 - 所有 `.env.example` 和环境样例统一放在仓库根目录；实际 `.env` 不入 Git，应用和部署目录不重复维护同一变量清单。
 - 一个 JavaScript/TypeScript 仓库只保留一条主要安装链路和清晰的运行时边界：新项目优先 `packageManager` + `bun.lock` + `.bun-version`；pnpm/npm 回退项目使用对应 lockfile + `.node-version`。如果已有项目的应用运行在 Bun、而专用文档工具或平台工具必须使用 Node，可以保留多个明确隔离的运行时，但每个实际运行时都要固定版本、记录原因，不能无说明地混用或同时维护 Bun、Node 和 nvm 三套同义版本文件。
-- 新 Bun 项目使用根 `workspaces` + `turbo.json`，每个 app/package 提供标准任务，根脚本只调用 Turbo；根 `playwright.config.ts`、根 `tests/e2e/` 和根 `scripts/` 是工作区级自动化的默认位置。
+- 新 Bun 多应用项目使用根 `workspaces` + `turbo.json`，每个 app/package 提供标准任务，根脚本只调用 Turbo；根 `playwright.config.ts`、根 `tests/e2e/` 和根 `scripts/` 是工作区级自动化的默认位置。简单脚本项目直接使用脚本入口，不创建这些工作区级层。
 - `PRODUCT.md` 是根目录固定的产品决策文档，供 `impeccable` 和其他 UI/产品任务读取；正文工程文档统一放根 `docs/` 并默认使用中文，`README.md` 可按 GitHub 读者保留英文或双语。长期命令逻辑放 `src/commands/`，工作区自动化入口按职责放根 `scripts/dev`、`scripts/db`、`scripts/verify`、`scripts/deploy`、`scripts/backup`、`scripts/release`。
 - 只有项目确实需要只读审计、外部 API/Provider 文档研究、浏览器人工查询或脱敏资料接收时，才创建根 `tools/`；它不是每个项目的必备目录，也不是业务运行时。数据库迁移、部署、备份、发布和会改变工作区或线上状态的入口仍放在 `scripts/` 或 app 的 `src/commands/`，并保留显式确认边界。
 - Tailwind 4 默认采用 CSS-first 配置和应用自己的 Vite 插件；没有明确兼容需求时删除根目录 `tailwind.config.ts`。Tailwind 3 或确实需要 legacy `@config` 时，配置只能放在所属前端应用目录并说明原因。

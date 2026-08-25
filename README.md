@@ -1,6 +1,6 @@
 # puzzle-fuzzy-skill
 
-Puzzle Fuzzy 的个人 TypeScript 全栈、产品界面、Provider、桌面端和交付偏好 skill。新项目默认使用 Biome；Bun 优先的 HTTP API 默认使用 Elysia，只有需要兼容 Node 时才使用 Hono。
+Puzzle Fuzzy 的个人 TypeScript 全栈、产品界面、Provider、桌面端、简单 Bun 脚本和交付偏好 skill。TypeScript 项目默认使用 Biome；Bun 优先的 HTTP API 默认使用 Elysia，只有需要兼容 Node 时才使用 Hono。简单脚本只用 Bun 运行，需要 lint/format 时仅添加必要的 Biome 配置，不默认创建 Git/GitHub 仓库或复杂架构。
 
 ## 定位
 
