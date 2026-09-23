@@ -21,12 +21,16 @@ license: MIT
 当 Puzzle Fuzzy 明确提出“搭建一个可以正式上线的项目”、生产全栈多端项目，或同等明确的长期交付目标时，使用独立模板仓库 [`puzzle-fuzzy-production-starter`](https://github.com/puzzle-fuzzy/puzzle-fuzzy-production-starter) 作为产品无关的起点，而不是从零拼装工程。它不是任何既有项目的副本，也不包含业务内容、账号、密码、数据库数据、品牌或部署凭据。
 
 - 先读 [references/production-starter.md](references/production-starter.md)，确认模板版本、覆盖范围和未验证边界；再检查用户指定目录是否已存在、是否位于已有仓库内及当前 Git 状态。
-- 默认基线是 Bun workspace + Turborepo：`apps/api`（Elysia + TypeScript）、`apps/admin`（React + HeroUI v3 原生 compound components）、`apps/miniprogram`（原生微信小程序 TypeScript）、`packages/contracts`、`packages/auth-core`、`packages/db`（PostgreSQL + Drizzle）、根 `tests/`、迁移、health/readiness、结构化脱敏日志、Docker Compose、环境样例和 `verify`。
-- “Web 前端”默认仅指内部 `apps/admin`。只有用户明确要公开 Web 客户端时，才带 `--with-web` 或运行模板的 `bun run add:public-web`；它只添加技术壳，绝不编造页面、业务数据或营销内容。
+- 默认基线是 Bun workspace + Turborepo：`apps/api`（Elysia + TypeScript）、`apps/admin`（React Router + HeroUI v3 内部管理端）、`apps/web`（React Router + HeroUI v3 用户 Web 技术壳）、`apps/miniprogram`（原生微信小程序 TypeScript）、`packages/contracts`、`packages/auth-core`、`packages/db`（PostgreSQL + Drizzle）、根 `tests/`、迁移、health/readiness、结构化脱敏日志、Docker Compose、环境样例和 `verify`。尚无稳定验收价值的能力不进入核心模板。
+- `apps/admin` 与 `apps/web` 默认同时存在，各自以独立 React Router route tree、layout、根路由与 404/未匹配边界作为多页面扩展起点。两者可以复用已确认的 token 或纯展示 UI，但必须分别保留路由、权限、数据访问、Vite/deployment 和验收边界；`apps/web` 不得因默认存在而生成业务页面、品牌文案、营销内容或测试数据。小程序继续使用原生 `app.json` 页面路由，不引入 React Router。
 - 使用 `scripts/scaffold-production-project.ts` 从模板复制到新目录。该脚本用临时 clone 取得已验证模板、排除 `.git`、替换项目标识，并初始化新的无历史 Git 仓库；它不创建 GitHub 仓库、不配置 remote、不 push。
 - 只有用户明确要求私有 GitHub 备份/协作/发布时，才在已验证并提交的新项目中创建私有远程并 push。默认落位是 `/Users/yxswy/Documents/GitHub/<project-name>`，但先确认该目录和父仓库边界；不能覆盖已有目录，也不能把模板 remote 误作新项目 remote。
-- 模板不替用户决定产品业务、品牌、认证渠道/首个管理员策略、权限模型、公开 Web、部署目标、域名/HTTPS、secret manager、数据库托管、Provider 或发布策略。生成后先提出这些最小决策，再做业务实现；`/api/auth/status` 不是登录机制。
+- 模板不替用户决定产品业务、品牌、认证渠道/首个管理员策略、权限模型、部署目标、域名/HTTPS、secret manager、数据库托管、Provider 或发布策略。生成后先提出这些最小决策，再做业务实现；`/api/auth/status` 不是登录机制。
 - 生成后先执行 `bun install`、`bun run verify`，再按风险分别验证数据库迁移、浏览器、微信开发者工具/真机、认证、Provider、部署及生产验收。通过模板 `verify` 不表示上述外部边界已完成。
+
+### 渐进模块
+
+先读 [references/production-modules.md](references/production-modules.md)，按已确认的产品边界添加 E2E、认证、Worker、Provider 或部署模块；不为“以后也许会用”预装空依赖。用户自然语言提出“加 E2E”或“加 Playwright”时，先确认稳定页面、主交互和验收标准，再使用 `scripts/add-production-e2e.ts` 添加唯一的根 `playwright.config.ts`、根 `tests/e2e/`、Bun 脚本和报告忽略规则。它不生成假用例、不猜测服务命令、不安装浏览器或 CI；这些由确认后的真实流程和平台决定。
 
 简单脚本、一次性转换和无 API/UI/数据库/长期服务需求的任务继续使用最小目录，不能因为本节存在就套入生产工作区。
 
@@ -120,7 +124,7 @@ license: MIT
 以下都是适用条件下的个人默认，不是强制迁移规则：
 
 - 复杂产品、丰富状态、复杂 UI 组合、dashboard 或高级工作流优先 React；简单 CRUD、管理端、H5 和直线交互优先 Vue 3 + Vite。已有项目除非明确要求或有充分收益，不做框架迁移。
-- 多应用或全栈 TypeScript 新项目的工具链默认优先级为 Bun + Turborepo + monorepo，其次是 pnpm + Turborepo，最后才是 npm；简单脚本项目默认只使用 Bun 和脚本自身需要的最小配置，不引入 Turborepo、workspace 或应用分层。已有项目先保留实际兼容链路，不为了偏好强行换包管理器，但一旦确认需要调整就尽早完成，不长期维护两套工具链。
+- 本 skill 的新 TypeScript 项目、生产底座和新增 JavaScript workspace 只使用 Bun + Turborepo + monorepo：`packageManager`、`bun.lock`、`.bun-version`、安装、脚本、CI 和 Docker 命令均使用 Bun。简单脚本仍只使用 Bun 和必要的最小配置，不引入 Turborepo、workspace 或应用分层。
 - 新项目默认使用根目录 `biome.json`、`@biomejs/biome`、`lint` 和 `format`；不新增 ESLint/Prettier 平行规则，只有不可替代的框架规则才允许局部补充。已有项目先遵循现有工具链，不为统一偏好强行迁移。
 - 新项目的 HTTP API 默认使用 Bun 优先的 Elysia；只有存在明确的 Node runtime 或 Node 生态兼容要求时，才选择 Hono。已有 Elysia/Hono 项目先保留现有框架，除非用户明确要求迁移或兼容性证据要求改变。
 - 新的多服务、可部署全栈项目默认使用 Docker Compose + PostgreSQL，并把数据库、迁移、健康检查和备份边界写清楚；明确的单机、离线、嵌入式或桌面工具才默认 SQLite。已有项目以现有系统、产品和外部契约的数据库边界为准，不为追求统一而强行迁移数据库。
@@ -157,7 +161,7 @@ license: MIT
 ## TypeScript、包边界与后端
 
 - 优先维护熟悉的 TypeScript 端到端边界；不要为了“架构更高级”把业务逻辑迁移到不熟悉的 Rust 或另一个语言层。
-- 按仓库当前 package manager 工作。多应用新项目按 [references/project-structure.md](references/project-structure.md) 使用 Bun + Turborepo monorepo；简单脚本只使用 Bun 运行脚本和必要依赖，不为了套用工作区模板添加额外层级。全局 Bun/Node/pnpm 升级不代表修改项目 `packageManager`、lockfile 或依赖；项目 pin 优先于机器默认版本。
+- 多应用新项目按 [references/project-structure.md](references/project-structure.md) 使用 Bun + Turborepo monorepo；简单脚本只使用 Bun 运行脚本和必要依赖，不为了套用工作区模板添加额外层级。全局 Bun/Node 升级不代表修改项目 `packageManager`、lockfile 或依赖；项目 pin 优先于机器默认版本。
 - 多产品面默认使用 `apps/*`、`packages/*` 的清晰边界：所有可独立运行或部署的进程（`api`、`web`、`worker`、`desktop`、`extension`、`ios`）放在 `apps/`；共享 contracts、schema、API client 和纯 domain/policy 放在 `packages/`。只有当前仓库已经采用 `services/*` 或明确需要独立的服务目录时才保留，不为套模板新增平行边界。
 - 新建 API 默认使用 Elysia；优先 `@elysia/eden` 或仓库等价 typed client。只有 API 必须兼容 Node runtime 或 Node 生态时才使用 Hono，并配合 `hono/client`。已有 API 保留当前框架；两者都使用 app factory，避免测试导入时启动 listener 或 Provider。
 - 优先使用官方或成熟的 framework integration 处理 CORS、cookies、JWT、OpenAPI、static files 等横切能力，不手写已有可靠替代方案。
@@ -243,7 +247,7 @@ license: MIT
 - HTTP 服务统一使用 `apps/api`；后台常驻进程或队列消费者使用 `apps/worker`；`apps/server` 不再作为新项目目录名。已有 `server` 只有在迁移计划覆盖 package 名、workspace filter、Docker、CI、文档和外部调用后才改名。
 - 根目录只放工作区入口配置；部署 Dockerfile、Compose、Nginx 和部署环境样例统一放在 `deploy/`。`infra/` 仅用于 Terraform/OpenTofu、Ansible、Kubernetes 等基础设施即代码。
 - 所有 `.env.example` 和环境样例统一放在仓库根目录；实际 `.env` 不入 Git，应用和部署目录不重复维护同一变量清单。
-- 一个 JavaScript/TypeScript 仓库只保留一条主要安装链路和清晰的运行时边界：新项目优先 `packageManager` + `bun.lock` + `.bun-version`；pnpm/npm 回退项目使用对应 lockfile + `.node-version`。如果已有项目的应用运行在 Bun、而专用文档工具或平台工具必须使用 Node，可以保留多个明确隔离的运行时，但每个实际运行时都要固定版本、记录原因，不能无说明地混用或同时维护 Bun、Node 和 nvm 三套同义版本文件。
+- 一个 JavaScript/TypeScript 仓库只保留 Bun 安装链路：`packageManager` + `bun.lock` + `.bun-version` + Bun workspaces。如果专用文档或平台工具必须使用 Node，它只能是隔离的外部工具运行时，不能引入第二条 JavaScript 安装链路、lockfile 或 workspace 配置；每个实际运行时都要固定版本并记录原因。
 - 新 Bun 多应用项目使用根 `workspaces` + `turbo.json`，每个 app/package 提供标准任务，根脚本只调用 Turbo；根 `playwright.config.ts`、根 `tests/e2e/` 和根 `scripts/` 是工作区级自动化的默认位置。简单脚本项目直接使用脚本入口，不创建这些工作区级层。
 - `PRODUCT.md` 是根目录固定的产品决策文档，供 `impeccable` 和其他 UI/产品任务读取；正文工程文档统一放根 `docs/` 并默认使用中文，`README.md` 可按 GitHub 读者保留英文或双语。长期命令逻辑放 `src/commands/`，工作区自动化入口按职责放根 `scripts/dev`、`scripts/db`、`scripts/verify`、`scripts/deploy`、`scripts/backup`、`scripts/release`。
 - 只有项目确实需要只读审计、外部 API/Provider 文档研究、浏览器人工查询或脱敏资料接收时，才创建根 `tools/`；它不是每个项目的必备目录，也不是业务运行时。数据库迁移、部署、备份、发布和会改变工作区或线上状态的入口仍放在 `scripts/` 或 app 的 `src/commands/`，并保留显式确认边界。

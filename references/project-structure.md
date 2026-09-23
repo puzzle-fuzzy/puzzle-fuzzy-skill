@@ -25,10 +25,8 @@ repository/
 ├── AGENTS.md                         # 仓库级协作和验证边界（需要时）
 ├── README.md
 ├── package.json                      # workspace、packageManager、统一脚本
-├── bun.lock                          # 新项目默认；与 pnpm-lock/npm lock 二选一
+├── bun.lock                          # 唯一 JavaScript lockfile
 ├── .bun-version                      # Bun 项目唯一运行时版本文件
-├── pnpm-lock.yaml                    # 兼容旧项目时使用，不能与其他 lock 并存
-├── .node-version                     # pnpm/npm 项目的唯一 Node 版本文件
 ├── .env.example                      # 根目录统一维护，禁止真实 secret
 ├── .env.test.example                 # 可选：测试环境变量名和安全默认值
 ├── .env.production.example           # 可选：生产变量名，不放真实值
@@ -102,7 +100,7 @@ repository/
 | --- | --- | --- |
 | HTTP 服务 | `apps/api` | 负责 HTTP/WebSocket、认证、路由和 API 进程入口 |
 | 独立后台进程 | `apps/worker` | 队列、调度、批处理、Provider 同步等独立进程 |
-| Web 前端 | `apps/web` | 浏览器 Web 应用；复杂项目默认 React，直线型管理端可 Vue |
+| Web 前端 | `apps/web` | 浏览器 Web 应用；默认 React Router route tree、layout、404 边界与独立 API client |
 | 桌面应用 | `apps/desktop` | Electron main/preload/renderer；新项目优先 electron-builder |
 | 浏览器扩展 | `apps/extension` | Chrome/Firefox 等扩展目标 |
 | 原生 iOS | `apps/ios` | SwiftUI/Xcode；不使用 `apps/mobile` 混淆原生边界 |
@@ -142,38 +140,26 @@ packages/catalog-ui/
 - `catalog-ui` 负责共享组件、设计 token、CSS、可访问性行为和组件级测试；Web 与 Electron renderer 通过 workspace dependency 使用同一个包。
 - `catalog-ui` 不直接读取 API、Electron IPC、`window`、storage、路由或环境变量；这些由 `apps/web`、`apps/desktop` 的 shell 通过 props、typed adapter 或 callback 注入。
 - 页面组合、路由、平台能力、API client、preload bridge 和窗口生命周期留在应用边界；共享 UI 只表达可复用的展示和交互契约。
+- 多页面 React 的 `apps/admin` 与 `apps/web` 各自创建和持有自己的 React Router route tree、layout、404/unknown-route boundary、权限 metadata 和 data client；不得把 admin guard 或用户路由混入另一个 app。生产静态宿主分别为两个 app 配置 `index.html` fallback。
 - React Web + React Electron 可以共享一个 `catalog-ui`；Vue 和 React 不能直接共享同一套组件实现。跨框架时共享 `packages/ui-tokens`、CSS 变量和 contracts，必要时分别维护 `catalog-ui-react` 与 `catalog-ui-vue`。
 - `packages/ui` 只放跨领域基础组件；产品领域组件使用 `packages/catalog-ui` 等明确名称，避免把整个产品 UI 塞进万能包。
 
 ## 4. package manager、运行时与 monorepo 工具链
 
-### 4.1 个人优先级
+### 4.1 Bun 是唯一 JavaScript 工作区链路
 
-JavaScript/TypeScript 项目的个人默认优先级为：
-
-1. **Bun + Turborepo + monorepo**：新项目的默认组合。
-2. **pnpm + Turborepo + monorepo**：已有 pnpm 项目、生态兼容或 CI/部署明确要求时使用。
-3. **npm**：只有外部平台、客户环境或依赖明确要求时使用，仍然保持 monorepo 边界。
-
-不因为个人偏好强行迁移已经稳定运行的项目；但新项目不要在 Bun、pnpm 和 npm 之间摇摆。
+本 skill 的新项目、生产底座和新增 JavaScript workspace 统一使用 **Bun + Turborepo + monorepo**。不创建第二个 JavaScript 包管理、lockfile、workspace 描述或等价安装脚本；已有项目要纳入这套生产底座时，先审计兼容性和迁移风险，再一次性迁移到 Bun。
 
 ### 4.2 一仓库一条 JavaScript 运行时链路
 
-`package.json` 的 `packageManager` 是包管理器事实来源，锁文件必须与它匹配：
-
-| 项目选择 | 必须保留 | 默认删除/禁止新增 |
-| --- | --- | --- |
-| Bun | `packageManager: bun@...`、`bun.lock`、`.bun-version`、根 `workspaces` | `pnpm-lock.yaml`、`package-lock.json`、`.node-version`、`.nvmrc` |
-| pnpm + Node | `packageManager: pnpm@...`、`pnpm-lock.yaml`、`.node-version`、根 `pnpm-workspace.yaml` | `bun.lock`、`package-lock.json`、`.bun-version`、`.nvmrc` |
-| npm + Node | `packageManager: npm@...`、`package-lock.json`、`.node-version`、根 `workspaces` | `bun.lock`、`pnpm-lock.yaml`、`.bun-version`、`.nvmrc` |
+`package.json` 的 `packageManager`、`bun.lock`、`.bun-version` 与根 `workspaces` 是唯一 JavaScript 安装事实来源。
 
 规则：
 
-- 新的 TypeScript 全栈项目默认 Bun + Turborepo；因生态、CI 或已有仓库原因选择 pnpm/npm 时，明确记录原因。
-- `packageManager` 只决定安装器，不自动决定所有脚本的运行时；已有项目可以在 pnpm 工作区中使用 Bun 运行应用、使用 Node 运行专用文档工具，但必须按边界固定版本、记录原因，并避免让安装命令和运行命令互相替代。
+- 新的 TypeScript 全栈项目使用 Bun + Turborepo；安装、脚本、CI、Docker 和 README 都用 Bun。
+- `packageManager` 只决定安装器，不自动决定所有脚本的运行时；专用文档或平台工具需要 Node 时，将其隔离为外部工具运行时，不得引入第二条 JavaScript 安装链路。
 - `engines.node` 可以作为兼容性下限，但不等于额外的项目运行时；它必须和实际 CI/runtime 一致。
-- `.nvmrc` 只作为历史兼容文件保留，不能与 `.node-version` 并列成为两个事实来源；迁移完成后删除。
-- 不提交第二个锁文件，不在脚本中混用 `bun`、`pnpm`、`npm` 安装同一工作区；命令、CI、Docker 和 README 使用同一包管理器。
+- 不提交第二个锁文件、版本文件或 workspace 配置；命令、CI、Docker 和 README 使用同一条 Bun 链路。
 - CI、Docker 和 README 都从 `packageManager` 与唯一版本文件读取版本，不写另一套隐含版本。
 - Swift/Xcode、Rust 等原生工具链不通过 Node 版本文件表达；按各自平台的工程文件和官方工具管理。
 
@@ -198,7 +184,7 @@ JavaScript/TypeScript 项目的个人默认优先级为：
 
 - `turbo` 和 `@biomejs/biome` 作为根开发依赖；每个 app/package 声明自己的 `dev`、`build`、`typecheck`、`lint`、`test`、`verify` 任务，根脚本只负责编排。
 - `turbo.json` 放在仓库根目录，定义任务依赖、缓存输出、持久化 dev 任务和必要的环境变量；不要在根脚本中手写一长串 package-by-package typecheck。
-- Bun monorepo 使用根 `workspaces`；只有 pnpm 回退项目使用 `pnpm-workspace.yaml`。新项目不同时维护两套 workspace 声明。
+- Bun monorepo 使用根 `workspaces`；不维护平行 workspace 声明。
 - 需要对单个包调试时使用 `bun run --filter <package>` 或 `bun --cwd <app>`，全局验证使用 `turbo run`。
 - `turbo` 只负责任务编排和缓存，不替代业务脚本、测试 runner、数据库迁移工具或部署工具。
 
@@ -206,7 +192,7 @@ JavaScript/TypeScript 项目的个人默认优先级为：
 
 迁移运行时前必须检查：
 
-- lockfile 和 `package.json` 的包管理器是否一致。
+- `packageManager`、`bun.lock`、`.bun-version` 和根 `workspaces` 是否一致。
 - CI setup、Docker 基础镜像、README、脚本和 Git hooks 是否引用旧运行时。
 - 原生依赖、构建脚本和部署主机是否真的支持目标运行时。
 - 迁移后执行 install、typecheck、test、build 和最小启动 smoke；不能只删除版本文件。
@@ -383,7 +369,7 @@ UI 图标规则仍然独立生效：`assets/` 中存在图片或品牌素材，�
 | 维度 | 四个项目体现出的共同事实 | 归纳后的默认规范 |
 | --- | --- | --- |
 | 工作区边界 | 四个项目都使用 `apps/`、`packages/`、根 `package.json`、根 Biome 或统一脚本入口；部分历史项目仍有 `apps/server`、应用级 env 或手工编排 | 新项目使用 `apps/*`、`packages/*`、根 workspace 配置和统一任务图；历史目录只在引用、部署和数据边界审计后迁移 |
-| 包管理器与运行时 | Bun + Turborepo 是目标方向；已有项目同时存在 Bun 和 pnpm；专用工具可能有独立运行时 | 新项目优先 Bun + Turborepo；已有 pnpm 项目不强行切换。安装器、应用运行时和专用工具运行时分开记录并固定版本 |
+| 包管理器与运行时 | Bun + Turborepo 是目标方向；专用工具可能有独立运行时 | 新项目与生产底座统一 Bun + Turborepo；安装链路、应用运行时和隔离专用工具运行时分开记录并固定版本 |
 | 格式化与静态检查 | 四个项目都以 Biome 为主要格式化/lint 工具，没有形成新的 ESLint/Prettier 平行链路 | 默认使用根 `biome.json`；只有不可替代的框架规则才允许局部补充，并记录原因 |
 | 前端与共享 UI | React、Vue、小程序等平台并存；同一渲染框架的 Web/Electron 可以共享领域 UI；不同框架不能直接共享组件实现 | 复杂产品优先 React，简单管理/H5 优先 Vue；`catalog-ui` 只在同框架内共享，跨框架共享 token、contracts 和设计规范 |
 | 测试 | `bun test`、已有 `tsx --test` 和 Vitest 并存；Vitest 的合理边界是 DOM/挂载/事件/组件状态，页面级 Playwright 不是默认项 | domain/API/repository/数据库/Provider/命令优先 `bun test`；已有 runner 先记录再迁移；组件测试按需 Vitest；页面形态稳定后才做 Playwright |
@@ -406,7 +392,7 @@ UI 图标规则仍然独立生效：`assets/` 中存在图片或品牌素材，�
 - 如果兼容层没有明确的删除条件或日期，就视为未完成设计，应先提出疑问，不要直接实现。
 
 1. **建立清单**：记录当前目录、package name、workspace filter、脚本、CI、Docker context、Compose volume、环境变量和外部 URL。
-2. **先统一事实来源**：确定 Bun/pnpm/npm、唯一运行时版本文件、唯一 lockfile、根 `.env.example`、根 `biome.json`、根 `turbo.json` 和目标目录树。
+2. **先统一事实来源**：确定 Bun、`packageManager`、`.bun-version`、`bun.lock`、根 `workspaces`、根 `.env.example`、根 `biome.json`、根 `turbo.json` 和目标目录树。
 3. **先统一编排和工具**：补齐根 Turbo task、Biome、Playwright（需要时）和分组后的 `scripts/`，再改 package scripts。
 4. **先迁移无数据项**：先改 package name、脚本、CI 和中文文档，再 `git mv` 应用目录；每一步运行 install、typecheck 和 focused test。
 5. **迁移共享 UI**：同框架的 Web/Electron 抽到 `packages/<domain>-ui`；先确认没有 API/IPC/路由耦合，再更新两端入口和视觉测试。
@@ -428,7 +414,7 @@ UI 图标规则仍然独立生效：`assets/` 中存在图片或品牌素材，�
 - Web 和 Electron 使用不同 UI 框架，却要求共用同一个 `catalog-ui` 实现。
 - 根目录 env 需要被 Vite、Bun、Compose 或外部部署工具读取，但当前启动 cwd 不一致。
 - 现有 Playwright 测试依赖 app-local config、固定端口、登录态或桌面窗口，不能直接迁移到根配置。
-- pnpm/npm 项目是否真的具备切换到 Bun 的依赖、原生模块和 CI 条件。
+- 既有项目是否具备切换到 Bun 的依赖、原生模块和 CI 条件。
 - `tools/` 需要访问登录、验证码或受限 Provider 文档时，是否具备访问授权、允许主机、人工交互和脱敏输出边界；不能把未确认的文档查询结果直接当成已授权的业务 contract。
 
 提问时至少给出：当前证据、真正未知点、推荐默认、另一方案的维护代价，以及需要用户确认的最小决定。没有这些影响时可以按本规范可逆地默认执行。

@@ -8,13 +8,12 @@ type Options = {
 	name: string
 	target: string
 	template: string
-	withWeb: boolean
 }
 
 function usage(message?: string): never {
 	if (message) console.error(`Error: ${message}`)
 	console.error(
-		'Usage: bun scaffold-production-project.ts --name <kebab-case> [--path <new-directory>] [--template <git-url-or-path>] [--with-web]',
+		'Usage: bun scaffold-production-project.ts --name <kebab-case> [--path <new-directory>] [--template <git-url-or-path>]',
 	)
 	process.exit(1)
 }
@@ -23,14 +22,9 @@ function readOptions(args: string[]): Options {
 	let name: string | undefined
 	let target: string | undefined
 	let template = defaultTemplate
-	let withWeb = false
 
 	for (let index = 0; index < args.length; index += 1) {
 		const argument = args[index]
-		if (argument === '--with-web') {
-			withWeb = true
-			continue
-		}
 		const value = args[index + 1]
 		if (!value || value.startsWith('--')) usage(`Missing value for ${argument}`)
 		if (argument === '--name') name = value
@@ -47,7 +41,6 @@ function readOptions(args: string[]): Options {
 		name,
 		target: resolve(target ?? join(process.cwd(), name)),
 		template,
-		withWeb,
 	}
 }
 
@@ -97,11 +90,6 @@ try {
 		recursive: true,
 		filter: (source) => basename(source) !== '.git',
 	})
-	if (options.withWeb) {
-		await cp(join(options.target, 'variants/public-web'), join(options.target, 'apps/web'), {
-			recursive: true,
-		})
-	}
 	await replaceProjectTokens(options.target, options.name)
 	await run('git', ['init', '-b', 'main'], options.target)
 	console.log(`Created ${options.target}`)
