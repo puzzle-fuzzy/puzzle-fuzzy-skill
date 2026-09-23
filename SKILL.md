@@ -1,6 +1,6 @@
 ---
 name: puzzle-fuzzy-skill
-description: 仅用于 Puzzle Fuzzy 个人项目的 TypeScript 全栈、产品界面、Provider、桌面端、简单 Bun 脚本和交付偏好；在官方文档、标准和当前仓库约定无法决定时使用。复杂全栈项目默认偏好 Bun + Turborepo monorepo、Biome、React/Vue 界面、Elysia API（只有需要兼容 Node 时采用 Hono）、Drizzle/Zod 领域代码、Electron Builder 打包和已有的 Tauri/Rust 桌面壳；简单脚本保持最小结构。
+description: 仅用于 Puzzle Fuzzy 个人项目的工程偏好与“正式上线”生产底座。复杂全栈多端项目可从 Bun + Turborepo、Elysia、React + HeroUI v3、原生微信小程序、Drizzle/PostgreSQL 的独立模板开始；简单脚本不套用。官方文档、标准、当前仓库与用户确认的产品边界始终优先。
 license: MIT
 ---
 
@@ -15,6 +15,20 @@ license: MIT
 - 记忆中的历史结论只能作为线索；路径、端口、版本、提交号、依赖状态和 Provider 页面都必须重新检查，不能直接当作当前事实。
 
 不要把本 skill 中的个人偏好包装成适用于其他用户或所有项目的硬性规范。
+
+## “正式上线项目”生产底座模式
+
+当 Puzzle Fuzzy 明确提出“搭建一个可以正式上线的项目”、生产全栈多端项目，或同等明确的长期交付目标时，使用独立模板仓库 [`puzzle-fuzzy-production-starter`](https://github.com/puzzle-fuzzy/puzzle-fuzzy-production-starter) 作为产品无关的起点，而不是从零拼装工程。它不是任何既有项目的副本，也不包含业务内容、账号、密码、数据库数据、品牌或部署凭据。
+
+- 先读 [references/production-starter.md](references/production-starter.md)，确认模板版本、覆盖范围和未验证边界；再检查用户指定目录是否已存在、是否位于已有仓库内及当前 Git 状态。
+- 默认基线是 Bun workspace + Turborepo：`apps/api`（Elysia + TypeScript）、`apps/admin`（React + HeroUI v3 原生 compound components）、`apps/miniprogram`（原生微信小程序 TypeScript）、`packages/contracts`、`packages/auth-core`、`packages/db`（PostgreSQL + Drizzle）、根 `tests/`、迁移、health/readiness、结构化脱敏日志、Docker Compose、环境样例和 `verify`。
+- “Web 前端”默认仅指内部 `apps/admin`。只有用户明确要公开 Web 客户端时，才带 `--with-web` 或运行模板的 `bun run add:public-web`；它只添加技术壳，绝不编造页面、业务数据或营销内容。
+- 使用 `scripts/scaffold-production-project.ts` 从模板复制到新目录。该脚本用临时 clone 取得已验证模板、排除 `.git`、替换项目标识，并初始化新的无历史 Git 仓库；它不创建 GitHub 仓库、不配置 remote、不 push。
+- 只有用户明确要求私有 GitHub 备份/协作/发布时，才在已验证并提交的新项目中创建私有远程并 push。默认落位是 `/Users/yxswy/Documents/GitHub/<project-name>`，但先确认该目录和父仓库边界；不能覆盖已有目录，也不能把模板 remote 误作新项目 remote。
+- 模板不替用户决定产品业务、品牌、认证渠道/首个管理员策略、权限模型、公开 Web、部署目标、域名/HTTPS、secret manager、数据库托管、Provider 或发布策略。生成后先提出这些最小决策，再做业务实现；`/api/auth/status` 不是登录机制。
+- 生成后先执行 `bun install`、`bun run verify`，再按风险分别验证数据库迁移、浏览器、微信开发者工具/真机、认证、Provider、部署及生产验收。通过模板 `verify` 不表示上述外部边界已完成。
+
+简单脚本、一次性转换和无 API/UI/数据库/长期服务需求的任务继续使用最小目录，不能因为本节存在就套入生产工作区。
 
 ## 决策顺序
 
